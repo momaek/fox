@@ -103,7 +103,7 @@ type Engine struct {
 	RemoveExtraSlash bool
 
 	delims           render.Delims
-	secureJsonPrefix string
+	secureJSONPrefix string
 	HTMLRender       render.HTMLRender
 	FuncMap          template.FuncMap
 	allNoRoute       HandlersChain
@@ -144,7 +144,7 @@ func New() *Engine {
 		MaxMultipartMemory:     defaultMultipartMemory,
 		trees:                  make(methodTrees, 0, 9),
 		delims:                 render.Delims{Left: "{{", Right: "}}"},
-		secureJsonPrefix:       "while(1);",
+		secureJSONPrefix:       "while(1);",
 	}
 	engine.RouterGroup.engine = engine
 	engine.pool.New = func() interface{} {
@@ -171,9 +171,9 @@ func (engine *Engine) Delims(left, right string) *Engine {
 	return engine
 }
 
-// SecureJsonPrefix sets the secureJsonPrefix used in Context.SecureJSON.
-func (engine *Engine) SecureJsonPrefix(prefix string) *Engine {
-	engine.secureJsonPrefix = prefix
+// SecureJSONPrefix sets the secureJsonPrefix used in Context.SecureJSON.
+func (engine *Engine) SecureJSONPrefix(prefix string) *Engine {
+	engine.secureJSONPrefix = prefix
 	return engine
 }
 

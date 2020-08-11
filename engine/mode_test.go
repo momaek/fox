@@ -50,12 +50,12 @@ func TestDisableBindValidation(t *testing.T) {
 
 func TestEnableJsonDecoderUseNumber(t *testing.T) {
 	assert.False(t, binding.EnableDecoderUseNumber)
-	EnableJsonDecoderUseNumber()
+	EnableJSONDecoderUseNumber()
 	assert.True(t, binding.EnableDecoderUseNumber)
 }
 
 func TestEnableJsonDecoderDisallowUnknownFields(t *testing.T) {
 	assert.False(t, binding.EnableDecoderDisallowUnknownFields)
-	EnableJsonDecoderDisallowUnknownFields()
+	EnableJSONDecoderDisallowUnknownFields()
 	assert.True(t, binding.EnableDecoderDisallowUnknownFields)
 }
