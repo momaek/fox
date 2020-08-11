@@ -37,7 +37,7 @@ func RecoveryWithWriter(out io.Writer) HandlerFunc {
 	if out != nil {
 		logger = log.New(out, "\n\n\x1b[31m", log.LstdFlags)
 	}
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		defer func() {
 			if err := recover(); err != nil {
 				// Check for a broken connection, as it is not really a
@@ -81,6 +81,7 @@ func RecoveryWithWriter(out io.Writer) HandlerFunc {
 			}
 		}()
 		c.Next()
+		return
 	}
 }
 

@@ -149,8 +149,10 @@ func (group *RouterGroup) StaticFile(relativePath, filepath string) IRoutes {
 	if strings.Contains(relativePath, ":") || strings.Contains(relativePath, "*") {
 		panic("URL parameters can not be used when serving a static file")
 	}
-	handler := func(c *Context) {
+	handler := func(c *Context) (resp interface{}, err error) {
 		c.File(filepath)
+		// TODO: RENDER FILE
+		return
 	}
 	group.GET(relativePath, handler)
 	group.HEAD(relativePath, handler)
@@ -186,7 +188,7 @@ func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileS
 	absolutePath := group.calculateAbsolutePath(relativePath)
 	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs))
 
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		if _, nolisting := fs.(*onlyfilesFS); nolisting {
 			c.Writer.WriteHeader(http.StatusNotFound)
 		}
@@ -204,6 +206,8 @@ func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileS
 		f.Close()
 
 		fileServer.ServeHTTP(c.Writer, c.Request)
+		// TODO: ?
+		return
 	}
 }
 

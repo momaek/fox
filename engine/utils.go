@@ -27,25 +27,28 @@ func Bind(val interface{}) HandlerFunc {
 	}
 	typ := value.Type()
 
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		obj := reflect.New(typ).Interface()
 		if c.Bind(obj) == nil {
 			c.Set(BindKey, obj)
 		}
+		return
 	}
 }
 
 // WrapF is a helper function for wrapping http.HandlerFunc and returns a Gin middleware.
 func WrapF(f http.HandlerFunc) HandlerFunc {
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		f(c.Writer, c.Request)
+		return
 	}
 }
 
 // WrapH is a helper function for wrapping http.Handler and returns a Gin middleware.
 func WrapH(h http.Handler) HandlerFunc {
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		h.ServeHTTP(c.Writer, c.Request)
+		return
 	}
 }
 

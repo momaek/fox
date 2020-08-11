@@ -169,12 +169,14 @@ func ErrorLogger() HandlerFunc {
 
 // ErrorLoggerT returns a handlerfunc for a given error type.
 func ErrorLoggerT(typ ErrorType) HandlerFunc {
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		c.Next()
 		errors := c.Errors.ByType(typ)
 		if len(errors) > 0 {
 			c.JSON(-1, errors)
 		}
+		// TODO: -1 STATUS CODE
+		return errors, nil
 	}
 }
 
@@ -231,7 +233,7 @@ func LoggerWithConfig(conf LoggerConfig) HandlerFunc {
 		}
 	}
 
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		// Start timer
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -267,5 +269,7 @@ func LoggerWithConfig(conf LoggerConfig) HandlerFunc {
 
 			fmt.Fprint(out, formatter(param))
 		}
+
+		return nil, nil
 	}
 }

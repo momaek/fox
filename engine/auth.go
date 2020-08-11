@@ -47,7 +47,7 @@ func BasicAuthForRealm(accounts Accounts, realm string) HandlerFunc {
 	}
 	realm = "Basic realm=" + strconv.Quote(realm)
 	pairs := processAccounts(accounts)
-	return func(c *Context) {
+	return func(c *Context) (resp interface{}, err error) {
 		// Search user in the slice of allowed credentials
 		user, found := pairs.searchCredential(c.requestHeader("Authorization"))
 		if !found {
@@ -60,6 +60,7 @@ func BasicAuthForRealm(accounts Accounts, realm string) HandlerFunc {
 		// The user credentials was found, set user's id to key AuthUserKey in this context, the user's id can be read later using
 		// c.MustGet(gin.AuthUserKey).
 		c.Set(AuthUserKey, user)
+		return
 	}
 }
 
