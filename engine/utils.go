@@ -1,7 +1,3 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 🤖 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
 package engine
 
 import (
@@ -12,9 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/valyala/bytebufferpool"
+	"github.com/valyala/fasthttp"
+
 	"fox/engine/utils"
-	bytebufferpool "github.com/valyala/bytebufferpool"
-	fasthttp "github.com/valyala/fasthttp"
 )
 
 // quoteString escape special characters in a given string
@@ -26,7 +23,7 @@ func quoteString(raw string) string {
 }
 
 // Scan stack if other methods match
-func setMethodNotAllowed(ctx *Ctx) {
+func setMethodNotAllowed(ctx *Context) {
 	var matched bool
 	for i := 0; i < len(intMethod); i++ {
 		// Skip original method
@@ -75,7 +72,7 @@ func defaultString(value string, defaultValue []string) string {
 }
 
 // Generate and set ETag header to response
-func setETag(ctx *Ctx, weak bool) {
+func setETag(ctx *Context, weak bool) {
 	// Don't generate ETags for invalid responses
 	if ctx.Fasthttp.Response.StatusCode() != StatusOK {
 		return

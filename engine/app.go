@@ -1,12 +1,3 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 🤖 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
-// Package engine
-// Fiber is an Express inspired web framework built on top of Fasthttp,
-// the fastest HTTP engine for Go. Designed to ease things up for fast
-// development with zero memory allocation and performance in mind.
-
 package engine
 
 import (
@@ -26,9 +17,9 @@ import (
 	"time"
 
 	"fox/engine/utils"
-	colorable "github.com/mattn/go-colorable"
-	isatty "github.com/mattn/go-isatty"
-	fasthttp "github.com/valyala/fasthttp"
+	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-isatty"
+	"github.com/valyala/fasthttp"
 )
 
 // Version of current package
@@ -38,7 +29,7 @@ const Version = "1.13.3"
 type Map map[string]interface{}
 
 // Handler defines a function to serve HTTP requests.
-type Handler = func(*Ctx)
+type Handler = func(*Context)
 
 // Error represents an error that occurred while handling a request.
 type Error struct {
@@ -73,7 +64,7 @@ type Settings struct {
 	// 	ctx.Set(HeaderContentType, MIMETextPlainCharsetUTF8)
 	// 	ctx.Status(code).SendString(err.Error())
 	// }
-	ErrorHandler func(*Ctx, error) `json:"-"`
+	ErrorHandler func(*Context, error) `json:"-"`
 
 	// Enables the "Server: value" HTTP header.
 	// Default: ""
@@ -216,7 +207,7 @@ const (
 	defaultCompressedFileSuffix = ".fiber.gz"
 )
 
-var defaultErrorHandler = func(ctx *Ctx, err error) {
+var defaultErrorHandler = func(ctx *Context, err error) {
 	code := StatusInternalServerError
 	if e, ok := err.(*Error); ok {
 		code = e.Code
@@ -240,7 +231,7 @@ func New(settings ...*Settings) *App {
 		// Create Ctx pool
 		pool: sync.Pool{
 			New: func() interface{} {
-				return new(Ctx)
+				return new(Context)
 			},
 		},
 		// Set settings
@@ -607,7 +598,7 @@ func (app *App) init() *App {
 			Logger:       &disableLogger{},
 			LogAllErrors: false,
 			ErrorHandler: func(fctx *fasthttp.RequestCtx, err error) {
-				ctx := app.AcquireCtx(fctx)
+				ctx := app.AcquireContext(fctx)
 				if _, ok := err.(*fasthttp.ErrSmallBuffer); ok {
 					ctx.err = ErrRequestHeaderFieldsTooLarge
 				} else if netErr, ok := err.(*net.OpError); ok && netErr.Timeout() {
@@ -618,7 +609,7 @@ func (app *App) init() *App {
 					ctx.err = ErrBadRequest
 				}
 				app.Settings.ErrorHandler(ctx, ctx.err)
-				app.ReleaseCtx(ctx)
+				app.ReleaseContext(ctx)
 			},
 		}
 	}

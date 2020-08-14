@@ -1,7 +1,3 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 🤖 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
 package engine
 
 import (
@@ -9,8 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/valyala/fasthttp"
+
 	"fox/engine/utils"
-	fasthttp "github.com/valyala/fasthttp"
 )
 
 // Router defines all router handle interface includes app and group router.
@@ -82,7 +79,7 @@ func (r *Route) match(path, original string) (match bool, values []string) {
 	return false, values
 }
 
-func (app *App) next(ctx *Ctx) bool {
+func (app *App) next(ctx *Context) bool {
 	// Get stack length
 	lenr := len(app.stack[ctx.methodINT]) - 1
 	// Loop over the route stack starting from previous index
@@ -127,7 +124,7 @@ func (app *App) next(ctx *Ctx) bool {
 
 func (app *App) handler(rctx *fasthttp.RequestCtx) {
 	// Acquire Ctx with fasthttp request from pool
-	ctx := app.AcquireCtx(rctx)
+	ctx := app.AcquireContext(rctx)
 	// Prettify path
 	ctx.prettifyPath()
 	// Find match in stack
@@ -137,7 +134,7 @@ func (app *App) handler(rctx *fasthttp.RequestCtx) {
 		setETag(ctx, false)
 	}
 	// Release Ctx
-	app.ReleaseCtx(ctx)
+	app.ReleaseContext(ctx)
 }
 
 func (app *App) register(method, pathRaw string, handlers ...Handler) Route {
@@ -285,7 +282,7 @@ func (app *App) registerStatic(prefix, root string, config ...Static) Route {
 		}
 	}
 	fileHandler := fs.NewRequestHandler()
-	handler := func(c *Ctx) {
+	handler := func(c *Context) {
 		// Serve file
 		fileHandler(c.Fasthttp)
 		// Return request if found and not forbidden

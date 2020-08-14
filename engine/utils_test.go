@@ -1,15 +1,12 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 📝 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
 package engine
 
 import (
 	"testing"
 	"time"
 
+	"github.com/valyala/fasthttp"
+
 	"fox/engine/utils"
-	fasthttp "github.com/valyala/fasthttp"
 )
 
 // go test -v -run=Test_Utils_ -count=3
@@ -17,8 +14,8 @@ import (
 func Test_Utils_ETag(t *testing.T) {
 	app := New()
 	t.Run("Not Status OK", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		c.Send("Hello, World!")
 		c.Status(201)
 		setETag(c, false)
@@ -26,15 +23,15 @@ func Test_Utils_ETag(t *testing.T) {
 	})
 
 	t.Run("No Body", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		setETag(c, false)
 		utils.AssertEqual(t, "", string(c.Fasthttp.Response.Header.Peek(HeaderETag)))
 	})
 
 	t.Run("Has HeaderIfNoneMatch", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		c.Send("Hello, World!")
 		c.Fasthttp.Request.Header.Set(HeaderIfNoneMatch, `"13-1831710635"`)
 		setETag(c, false)
@@ -44,8 +41,8 @@ func Test_Utils_ETag(t *testing.T) {
 	})
 
 	t.Run("No HeaderIfNoneMatch", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		c.Send("Hello, World!")
 		setETag(c, false)
 		utils.AssertEqual(t, `"13-1831710635"`, string(c.Fasthttp.Response.Header.Peek(HeaderETag)))
@@ -55,8 +52,8 @@ func Test_Utils_ETag(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_App_ETag -benchmem -count=4
 func Benchmark_Utils_ETag(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Send("Hello, World!")
 	for n := 0; n < b.N; n++ {
 		setETag(c, false)
@@ -67,16 +64,16 @@ func Benchmark_Utils_ETag(b *testing.B) {
 func Test_Utils_ETag_Weak(t *testing.T) {
 	app := New()
 	t.Run("Set Weak", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		c.Send("Hello, World!")
 		setETag(c, true)
 		utils.AssertEqual(t, `W/"13-1831710635"`, string(c.Fasthttp.Response.Header.Peek(HeaderETag)))
 	})
 
 	t.Run("Match Weak ETag", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		c.Send("Hello, World!")
 		c.Fasthttp.Request.Header.Set(HeaderIfNoneMatch, `W/"13-1831710635"`)
 		setETag(c, true)
@@ -86,8 +83,8 @@ func Test_Utils_ETag_Weak(t *testing.T) {
 	})
 
 	t.Run("Not Match Weak ETag", func(t *testing.T) {
-		c := app.AcquireCtx(&fasthttp.RequestCtx{})
-		defer app.ReleaseCtx(c)
+		c := app.AcquireContext(&fasthttp.RequestCtx{})
+		defer app.ReleaseContext(c)
 		c.Send("Hello, World!")
 		c.Fasthttp.Request.Header.Set(HeaderIfNoneMatch, `W/"13-1831710635xx"`)
 		setETag(c, true)
@@ -98,8 +95,8 @@ func Test_Utils_ETag_Weak(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_App_ETag_Weak -benchmem -count=4
 func Benchmark_Utils_ETag_Weak(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Send("Hello, World!")
 	for n := 0; n < b.N; n++ {
 		setETag(c, true)

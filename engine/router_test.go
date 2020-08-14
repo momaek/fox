@@ -1,7 +1,3 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 🤖 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
 package engine
 
 // go test -v ./... -run=^$ -bench=Benchmark_Router -benchmem -count=2
@@ -13,8 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/valyala/fasthttp"
+
 	"fox/engine/utils"
-	fasthttp "github.com/valyala/fasthttp"
 )
 
 var routesFixture = routeJSON{}
@@ -32,7 +29,7 @@ func init() {
 func Test_Route_Match_SameLength(t *testing.T) {
 	app := New()
 
-	app.Get("/:param", func(ctx *Ctx) {
+	app.Get("/:param", func(ctx *Context) {
 		ctx.Send(ctx.Params("param"))
 	})
 
@@ -57,7 +54,7 @@ func Test_Route_Match_SameLength(t *testing.T) {
 func Test_Route_Match_Star(t *testing.T) {
 	app := New()
 
-	app.Get("/*", func(ctx *Ctx) {
+	app.Get("/*", func(ctx *Context) {
 		ctx.Send(ctx.Params("*"))
 	})
 
@@ -82,7 +79,7 @@ func Test_Route_Match_Star(t *testing.T) {
 func Test_Route_Match_Root(t *testing.T) {
 	app := New()
 
-	app.Get("/", func(ctx *Ctx) {
+	app.Get("/", func(ctx *Context) {
 		ctx.Send("root")
 	})
 
@@ -98,10 +95,10 @@ func Test_Route_Match_Root(t *testing.T) {
 func Test_Route_Match_Parser(t *testing.T) {
 	app := New()
 
-	app.Get("/foo/:Param", func(ctx *Ctx) {
+	app.Get("/foo/:Param", func(ctx *Context) {
 		ctx.Send(ctx.Params("Param"))
 	})
-	app.Get("/Foobar/*", func(ctx *Ctx) {
+	app.Get("/Foobar/*", func(ctx *Context) {
 		ctx.Send(ctx.Params("*"))
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/foo/bar", nil))
@@ -125,7 +122,7 @@ func Test_Route_Match_Parser(t *testing.T) {
 func Test_Route_Match_Middleware(t *testing.T) {
 	app := New()
 
-	app.Use("/foo/*", func(ctx *Ctx) {
+	app.Use("/foo/*", func(ctx *Context) {
 		ctx.Send(ctx.Params("*"))
 	})
 
@@ -150,7 +147,7 @@ func Test_Route_Match_Middleware(t *testing.T) {
 func Test_Route_Match_UnescapedPath(t *testing.T) {
 	app := New(&Settings{UnescapePath: true})
 
-	app.Use("/créer", func(ctx *Ctx) {
+	app.Use("/créer", func(ctx *Context) {
 		ctx.Send("test")
 	})
 
@@ -176,7 +173,7 @@ func Test_Route_Match_UnescapedPath(t *testing.T) {
 func Test_Route_Match_Middleware_HasPrefix(t *testing.T) {
 	app := New()
 
-	app.Use("/foo", func(ctx *Ctx) {
+	app.Use("/foo", func(ctx *Context) {
 		ctx.Send("middleware")
 	})
 
@@ -192,7 +189,7 @@ func Test_Route_Match_Middleware_HasPrefix(t *testing.T) {
 func Test_Route_Match_Middleware_Root(t *testing.T) {
 	app := New()
 
-	app.Use("/", func(ctx *Ctx) {
+	app.Use("/", func(ctx *Context) {
 		ctx.Send("middleware")
 	})
 
@@ -229,7 +226,7 @@ func Test_Router_Handler_SetETag(t *testing.T) {
 	app := New()
 	app.Settings.ETag = true
 
-	app.Get("/", func(c *Ctx) {
+	app.Get("/", func(c *Context) {
 		c.Send("Hello, World!")
 	})
 
@@ -245,7 +242,7 @@ func Test_Router_Handler_SetETag(t *testing.T) {
 //////////////////////////////////////////////
 
 func registerDummyRoutes(app *App) {
-	h := func(c *Ctx) {}
+	h := func(c *Context) {}
 	for _, r := range routesFixture.GithubAPI {
 		app.Add(r.Method, r.Path, h)
 	}
@@ -254,7 +251,7 @@ func registerDummyRoutes(app *App) {
 // go test -v -run=^$ -bench=Benchmark_App_MethodNotAllowed -benchmem -count=4
 func Benchmark_App_MethodNotAllowed(b *testing.B) {
 	app := New()
-	h := func(c *Ctx) {
+	h := func(c *Context) {
 		c.Send("Hello World!")
 	}
 	app.All("/this/is/a/", h)
@@ -275,7 +272,7 @@ func Benchmark_App_MethodNotAllowed(b *testing.B) {
 // go test -v ./... -run=^$ -bench=Benchmark_Router_NotFound -benchmem -count=4
 func Benchmark_Router_NotFound(b *testing.B) {
 	app := New()
-	app.Use(func(c *Ctx) {
+	app.Use(func(c *Context) {
 		c.Next()
 	})
 	registerDummyRoutes(app)
@@ -326,7 +323,7 @@ func Benchmark_Router_Handler_Strict_Case(b *testing.B) {
 // go test -v ./... -run=^$ -bench=Benchmark_Router_Chain -benchmem -count=4
 func Benchmark_Router_Chain(b *testing.B) {
 	app := New()
-	handler := func(c *Ctx) {
+	handler := func(c *Context) {
 		c.Next()
 	}
 	app.Get("/", handler, handler, handler, handler, handler, handler)
@@ -344,7 +341,7 @@ func Benchmark_Router_Chain(b *testing.B) {
 // go test -v ./... -run=^$ -bench=Benchmark_Router_WithCompression -benchmem -count=4
 func Benchmark_Router_WithCompression(b *testing.B) {
 	app := New()
-	handler := func(c *Ctx) {
+	handler := func(c *Context) {
 		c.Next()
 	}
 	app.Get("/", handler)
@@ -375,8 +372,8 @@ func Benchmark_Router_Next(b *testing.B) {
 	request.URI().SetPath("/user/keys/1337")
 	var res bool
 
-	c := app.AcquireCtx(request)
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(request)
+	defer app.ReleaseContext(c)
 
 	for n := 0; n < b.N; n++ {
 		c.indexRoute = -1
@@ -403,7 +400,7 @@ func Benchmark_Route_Match(b *testing.B) {
 		Path:   "/user/keys/:id",
 		Method: "DELETE",
 	}
-	route.Handlers = append(route.Handlers, func(c *Ctx) {})
+	route.Handlers = append(route.Handlers, func(c *Context) {})
 	for n := 0; n < b.N; n++ {
 		match, params = route.match("/user/keys/1337", "/user/keys/1337")
 	}
@@ -429,7 +426,7 @@ func Benchmark_Route_Match_Star(b *testing.B) {
 		Path:   "/user/keys/bla",
 		Method: "DELETE",
 	}
-	route.Handlers = append(route.Handlers, func(c *Ctx) {})
+	route.Handlers = append(route.Handlers, func(c *Context) {})
 	for n := 0; n < b.N; n++ {
 		match, params = route.match("/user/keys/bla", "/user/keys/bla")
 	}
@@ -455,7 +452,7 @@ func Benchmark_Route_Match_Root(b *testing.B) {
 		Path:   "/",
 		Method: "DELETE",
 	}
-	route.Handlers = append(route.Handlers, func(c *Ctx) {})
+	route.Handlers = append(route.Handlers, func(c *Context) {})
 	for n := 0; n < b.N; n++ {
 		match, params = route.match("/", "/")
 	}
@@ -485,7 +482,7 @@ func Benchmark_Router_Handler_Unescape(b *testing.B) {
 	app := New()
 	app.Settings.UnescapePath = true
 	registerDummyRoutes(app)
-	app.Delete("/créer", func(c *Ctx) {})
+	app.Delete("/créer", func(c *Context) {})
 
 	c := &fasthttp.RequestCtx{}
 

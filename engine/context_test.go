@@ -1,7 +1,3 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 🤖 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
 package engine
 
 // go test -v -run=^$ -bench=Benchmark_Ctx_Accepts -benchmem -count=4
@@ -24,17 +20,17 @@ import (
 	"time"
 
 	"github.com/valyala/bytebufferpool"
+	"github.com/valyala/fasthttp"
 
 	"fox/engine/utils"
-	fasthttp "github.com/valyala/fasthttp"
 )
 
-// go test -run Test_Ctx_Accepts
-func Test_Ctx_Accepts(t *testing.T) {
+// go test -run TestContextAccepts
+func TestContextAccepts(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAccept, "text/html,application/xhtml+xml,application/xml;q=0.9")
 	utils.AssertEqual(t, "", ctx.Accepts(""))
 	utils.AssertEqual(t, "", ctx.Accepts())
@@ -45,8 +41,8 @@ func Test_Ctx_Accepts(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Accepts -benchmem -count=4
 func Benchmark_Ctx_Accepts(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9")
 	var res string
 	b.ReportAllocs()
@@ -57,21 +53,21 @@ func Benchmark_Ctx_Accepts(b *testing.B) {
 	utils.AssertEqual(b, ".xml", res)
 }
 
-// go test -run Test_Ctx_Accepts_EmptyAccept
-func Test_Ctx_Accepts_EmptyAccept(t *testing.T) {
+// go test -run TestContextAccepts_EmptyAccept
+func TestContextAccepts_EmptyAccept(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	utils.AssertEqual(t, ".forwarded", ctx.Accepts(".forwarded"))
 }
 
-// go test -run Test_Ctx_Accepts_Wildcard
-func Test_Ctx_Accepts_Wildcard(t *testing.T) {
+// go test -run TestContextAccepts_Wildcard
+func TestContextAccepts_Wildcard(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAccept, "*/*;q=0.9")
 	utils.AssertEqual(t, "html", ctx.Accepts("html"))
 	utils.AssertEqual(t, "foo", ctx.Accepts("foo"))
@@ -80,12 +76,12 @@ func Test_Ctx_Accepts_Wildcard(t *testing.T) {
 	utils.AssertEqual(t, "xml", ctx.Accepts("xml"))
 }
 
-// go test -run Test_Ctx_AcceptsCharsets
-func Test_Ctx_AcceptsCharsets(t *testing.T) {
+// go test -run TestContextAcceptsCharsets
+func TestContextAcceptsCharsets(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAcceptCharset, "utf-8, iso-8859-1;q=0.5")
 	utils.AssertEqual(t, "utf-8", ctx.AcceptsCharsets("utf-8"))
 }
@@ -93,8 +89,8 @@ func Test_Ctx_AcceptsCharsets(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_AcceptsCharsets -benchmem -count=4
 func Benchmark_Ctx_AcceptsCharsets(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set("Accept-Charset", "utf-8, iso-8859-1;q=0.5")
 	var res string
 	b.ReportAllocs()
@@ -105,12 +101,12 @@ func Benchmark_Ctx_AcceptsCharsets(b *testing.B) {
 	utils.AssertEqual(b, "utf-8", res)
 }
 
-// go test -run Test_Ctx_AcceptsEncodings
-func Test_Ctx_AcceptsEncodings(t *testing.T) {
+// go test -run TestContextAcceptsEncodings
+func TestContextAcceptsEncodings(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAcceptEncoding, "deflate, gzip;q=1.0, *;q=0.5")
 	utils.AssertEqual(t, "gzip", ctx.AcceptsEncodings("gzip"))
 	utils.AssertEqual(t, "abc", ctx.AcceptsEncodings("abc"))
@@ -119,8 +115,8 @@ func Test_Ctx_AcceptsEncodings(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_AcceptsEncodings -benchmem -count=4
 func Benchmark_Ctx_AcceptsEncodings(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set(HeaderAcceptEncoding, "deflate, gzip;q=1.0, *;q=0.5")
 	var res string
 	b.ReportAllocs()
@@ -131,12 +127,12 @@ func Benchmark_Ctx_AcceptsEncodings(b *testing.B) {
 	utils.AssertEqual(b, "gzip", res)
 }
 
-// go test -run Test_Ctx_AcceptsLanguages
-func Test_Ctx_AcceptsLanguages(t *testing.T) {
+// go test -run TestContextAcceptsLanguages
+func TestContextAcceptsLanguages(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAcceptLanguage, "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5")
 	utils.AssertEqual(t, "fr", ctx.AcceptsLanguages("fr"))
 }
@@ -144,8 +140,8 @@ func Test_Ctx_AcceptsLanguages(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_AcceptsLanguages -benchmem -count=4
 func Benchmark_Ctx_AcceptsLanguages(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set(HeaderAcceptLanguage, "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5")
 	var res string
 	b.ReportAllocs()
@@ -156,22 +152,22 @@ func Benchmark_Ctx_AcceptsLanguages(b *testing.B) {
 	utils.AssertEqual(b, "fr", res)
 }
 
-// go test -run Test_Ctx_App
-func Test_Ctx_App(t *testing.T) {
+// go test -run TestContextApp
+func TestContextApp(t *testing.T) {
 	t.Parallel()
 	app := New()
 	app.Settings.BodyLimit = 1000
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	utils.AssertEqual(t, 1000, ctx.App().Settings.BodyLimit)
 }
 
-// go test -run Test_Ctx_Append
-func Test_Ctx_Append(t *testing.T) {
+// go test -run TestContextAppend
+func TestContextAppend(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Append("X-Test", "Hello")
 	ctx.Append("X-Test", "World")
 	ctx.Append("X-Test", "Hello", "World")
@@ -205,8 +201,8 @@ func Test_Ctx_Append(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Append -benchmem -count=4
 func Benchmark_Ctx_Append(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -217,12 +213,12 @@ func Benchmark_Ctx_Append(b *testing.B) {
 	utils.AssertEqual(b, "Hello, World", getString(c.Fasthttp.Response.Header.Peek("X-Custom-Header")))
 }
 
-// go test -run Test_Ctx_Attachment
-func Test_Ctx_Attachment(t *testing.T) {
+// go test -run TestContextAttachment
+func TestContextAttachment(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	// empty
 	ctx.Attachment()
 	utils.AssertEqual(t, `attachment`, string(ctx.Fasthttp.Response.Header.Peek(HeaderContentDisposition)))
@@ -238,8 +234,8 @@ func Test_Ctx_Attachment(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Attachment -benchmem -count=4
 func Benchmark_Ctx_Attachment(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -249,12 +245,12 @@ func Benchmark_Ctx_Attachment(b *testing.B) {
 	utils.AssertEqual(b, `attachment; filename="another+document.pdf%22%0D%0ABla%3A+%22fasel"`, string(c.Fasthttp.Response.Header.Peek(HeaderContentDisposition)))
 }
 
-// go test -run Test_Ctx_BaseURL
-func Test_Ctx_BaseURL(t *testing.T) {
+// go test -run TestContextBaseURL
+func TestContextBaseURL(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.SetRequestURI("http://google.com/test")
 	utils.AssertEqual(t, "http://google.com", ctx.BaseURL())
 }
@@ -262,8 +258,8 @@ func Test_Ctx_BaseURL(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Append -benchmem -count=4
 func Benchmark_Ctx_BaseURL(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.SetHost("google.com:1337")
 	c.Fasthttp.Request.URI().SetPath("/haha/oke/lol")
 	var res string
@@ -275,22 +271,22 @@ func Benchmark_Ctx_BaseURL(b *testing.B) {
 	utils.AssertEqual(b, "http://google.com:1337", res)
 }
 
-// go test -run Test_Ctx_Body
-func Test_Ctx_Body(t *testing.T) {
+// go test -run TestContextBody
+func TestContextBody(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.SetBody([]byte("john=doe"))
 	utils.AssertEqual(t, "john=doe", ctx.Body())
 }
 
-// go test -run Test_Ctx_BodyParser
-func Test_Ctx_BodyParser(t *testing.T) {
+// go test -run TestContextBodyParser
+func TestContextBodyParser(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	type Demo struct {
 		Name string `json:"name" xml:"name" form:"name" query:"name"`
@@ -325,8 +321,8 @@ func Test_Ctx_BodyParser(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_BodyParser_JSON -benchmem -count=4
 func Benchmark_Ctx_BodyParser_JSON(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	type Demo struct {
 		Name string `json:"name"`
 	}
@@ -349,8 +345,8 @@ func Benchmark_Ctx_BodyParser_JSON(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_BodyParser_XML -benchmem -count=4
 func Benchmark_Ctx_BodyParser_XML(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	type Demo struct {
 		Name string `xml:"name"`
 	}
@@ -373,8 +369,8 @@ func Benchmark_Ctx_BodyParser_XML(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_BodyParser_Form -benchmem -count=4
 func Benchmark_Ctx_BodyParser_Form(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	type Demo struct {
 		Name string `form:"name"`
 	}
@@ -397,8 +393,8 @@ func Benchmark_Ctx_BodyParser_Form(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_BodyParser_MultipartForm -benchmem -count=4
 func Benchmark_Ctx_BodyParser_MultipartForm(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	type Demo struct {
 		Name string `form:"name"`
 	}
@@ -419,22 +415,22 @@ func Benchmark_Ctx_BodyParser_MultipartForm(b *testing.B) {
 	utils.AssertEqual(b, "john", d.Name)
 }
 
-// go test -run Test_Ctx_Context
-func Test_Ctx_Context(t *testing.T) {
+// go test -run TestContextContext
+func TestContextContext(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	utils.AssertEqual(t, "*fasthttp.RequestCtx", fmt.Sprintf("%T", ctx.Context()))
 }
 
-// go test -run Test_Ctx_Cookie
-func Test_Ctx_Cookie(t *testing.T) {
+// go test -run TestContextCookie
+func TestContextCookie(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	expire := time.Now().Add(24 * time.Hour)
 	var dst []byte
 	dst = expire.In(time.UTC).AppendFormat(dst, time.RFC1123)
@@ -454,8 +450,8 @@ func Test_Ctx_Cookie(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Cookie -benchmem -count=4
 func Benchmark_Ctx_Cookie(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -467,23 +463,23 @@ func Benchmark_Ctx_Cookie(b *testing.B) {
 	utils.AssertEqual(b, "John=Doe; path=/; SameSite=Lax", getString(c.Fasthttp.Response.Header.Peek("Set-Cookie")))
 }
 
-// go test -run Test_Ctx_Cookies
-func Test_Ctx_Cookies(t *testing.T) {
+// go test -run TestContextCookies
+func TestContextCookies(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set("Cookie", "john=doe")
 	utils.AssertEqual(t, "doe", ctx.Cookies("john"))
 	utils.AssertEqual(t, "default", ctx.Cookies("unknown", "default"))
 }
 
-// go test -run Test_Ctx_Format
-func Test_Ctx_Format(t *testing.T) {
+// go test -run TestContextFormat
+func TestContextFormat(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAccept, MIMETextPlain)
 	ctx.Format([]byte("Hello, World!"))
 	utils.AssertEqual(t, "Hello, World!", string(ctx.Fasthttp.Response.Body()))
@@ -513,8 +509,8 @@ func Test_Ctx_Format(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Format -benchmem -count=4
 func Benchmark_Ctx_Format(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set("Accept", "text/plain")
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -527,8 +523,8 @@ func Benchmark_Ctx_Format(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Format_HTML -benchmem -count=4
 func Benchmark_Ctx_Format_HTML(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set("Accept", "text/html")
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -541,8 +537,8 @@ func Benchmark_Ctx_Format_HTML(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Format_JSON -benchmem -count=4
 func Benchmark_Ctx_Format_JSON(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set("Accept", "application/json")
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -555,8 +551,8 @@ func Benchmark_Ctx_Format_JSON(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Format_XML -benchmem -count=4
 func Benchmark_Ctx_Format_XML(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set("Accept", "application/xml")
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -566,13 +562,13 @@ func Benchmark_Ctx_Format_XML(b *testing.B) {
 	utils.AssertEqual(b, `<string>Hello, World!</string>`, string(c.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_FormFile
-func Test_Ctx_FormFile(t *testing.T) {
+// go test -run TestContextFormFile
+func TestContextFormFile(t *testing.T) {
 	// TODO: We should clean this up
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Ctx) {
+	app.Post("/test", func(c *Context) {
 		fh, err := c.FormFile("file")
 		utils.AssertEqual(t, nil, err)
 		utils.AssertEqual(t, "test", fh.Filename)
@@ -608,12 +604,12 @@ func Test_Ctx_FormFile(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_FormValue
-func Test_Ctx_FormValue(t *testing.T) {
+// go test -run TestContextFormValue
+func TestContextFormValue(t *testing.T) {
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Ctx) {
+	app.Post("/test", func(c *Context) {
 		utils.AssertEqual(t, "john", c.FormValue("name"))
 	})
 
@@ -632,12 +628,12 @@ func Test_Ctx_FormValue(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_Fresh
-func Test_Ctx_Fresh(t *testing.T) {
+// go test -run TestContextFresh
+func TestContextFresh(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	utils.AssertEqual(t, false, ctx.Fresh())
 
 	ctx.Fasthttp.Request.Header.Set(HeaderIfNoneMatch, "*")
@@ -666,12 +662,12 @@ func Test_Ctx_Fresh(t *testing.T) {
 	utils.AssertEqual(t, false, ctx.Fresh())
 }
 
-// go test -run Test_Ctx_Get
-func Test_Ctx_Get(t *testing.T) {
+// go test -run TestContextGet
+func TestContextGet(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderAcceptCharset, "utf-8, iso-8859-1;q=0.5")
 	ctx.Fasthttp.Request.Header.Set(HeaderReferer, "Monster")
 	utils.AssertEqual(t, "utf-8, iso-8859-1;q=0.5", ctx.Get(HeaderAcceptCharset))
@@ -679,31 +675,31 @@ func Test_Ctx_Get(t *testing.T) {
 	utils.AssertEqual(t, "default", ctx.Get("unknown", "default"))
 }
 
-// go test -run Test_Ctx_Hostname
-func Test_Ctx_Hostname(t *testing.T) {
+// go test -run TestContextHostname
+func TestContextHostname(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.SetRequestURI("http://google.com/test")
 	utils.AssertEqual(t, "google.com", ctx.Hostname())
 }
 
-// go test -run Test_Ctx_IP
-func Test_Ctx_IP(t *testing.T) {
+// go test -run TestContextIP
+func TestContextIP(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	utils.AssertEqual(t, "0.0.0.0", ctx.IP())
 }
 
-// go test -run Test_Ctx_IPs
-func Test_Ctx_IPs(t *testing.T) {
+// go test -run TestContextIPs
+func TestContextIPs(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderXForwardedFor, "127.0.0.1, 127.0.0.1, 127.0.0.1")
 	utils.AssertEqual(t, []string{"127.0.0.1", "127.0.0.1", "127.0.0.1"}, ctx.IPs())
 }
@@ -711,8 +707,8 @@ func Test_Ctx_IPs(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_IPs -benchmem -count=4
 func Benchmark_Ctx_IPs(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set(HeaderXForwardedFor, "127.0.0.1, 127.0.0.1, 127.0.0.1")
 	var res []string
 	b.ReportAllocs()
@@ -723,12 +719,12 @@ func Benchmark_Ctx_IPs(b *testing.B) {
 	utils.AssertEqual(b, []string{"127.0.0.1", "127.0.0.1", "127.0.0.1"}, res)
 }
 
-// go test -run Test_Ctx_Is
-func Test_Ctx_Is(t *testing.T) {
+// go test -run TestContextIs
+func TestContextIs(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderContentType, MIMETextHTML+"; boundary=something")
 	utils.AssertEqual(t, true, ctx.Is(".html"))
 	utils.AssertEqual(t, true, ctx.Is("html"))
@@ -761,8 +757,8 @@ func Test_Ctx_Is(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Is -benchmem -count=4
 func Benchmark_Ctx_Is(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.Header.Set(HeaderContentType, MIMEApplicationJSON)
 	var res bool
 	b.ReportAllocs()
@@ -774,14 +770,14 @@ func Benchmark_Ctx_Is(b *testing.B) {
 	utils.AssertEqual(b, true, res)
 }
 
-// go test -run Test_Ctx_Locals
-func Test_Ctx_Locals(t *testing.T) {
+// go test -run TestContextLocals
+func TestContextLocals(t *testing.T) {
 	app := New()
-	app.Use(func(c *Ctx) {
+	app.Use(func(c *Context) {
 		c.Locals("john", "doe")
 		c.Next()
 	})
-	app.Get("/test", func(c *Ctx) {
+	app.Get("/test", func(c *Context) {
 		utils.AssertEqual(t, "doe", c.Locals("john"))
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test", nil))
@@ -789,14 +785,14 @@ func Test_Ctx_Locals(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_Method
-func Test_Ctx_Method(t *testing.T) {
+// go test -run TestContextMethod
+func TestContextMethod(t *testing.T) {
 	t.Parallel()
 	fctx := &fasthttp.RequestCtx{}
 	fctx.Request.Header.SetMethod(MethodGet)
 	app := New()
-	ctx := app.AcquireCtx(fctx)
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(fctx)
+	defer app.ReleaseContext(ctx)
 	utils.AssertEqual(t, MethodGet, ctx.Method())
 	ctx.Method(MethodPost)
 	utils.AssertEqual(t, MethodPost, ctx.Method())
@@ -805,12 +801,12 @@ func Test_Ctx_Method(t *testing.T) {
 	utils.AssertEqual(t, MethodPost, ctx.Method())
 }
 
-// go test -run Test_Ctx_MultipartForm
-func Test_Ctx_MultipartForm(t *testing.T) {
+// go test -run TestContextMultipartForm
+func TestContextMultipartForm(t *testing.T) {
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Ctx) {
+	app.Post("/test", func(c *Context) {
 		result, err := c.MultipartForm()
 		utils.AssertEqual(t, nil, err)
 		utils.AssertEqual(t, "john", result.Value["name"][0])
@@ -831,27 +827,27 @@ func Test_Ctx_MultipartForm(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_OriginalURL
-func Test_Ctx_OriginalURL(t *testing.T) {
+// go test -run TestContextOriginalURL
+func TestContextOriginalURL(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.SetRequestURI("http://google.com/test?search=demo")
 	utils.AssertEqual(t, "http://google.com/test?search=demo", ctx.OriginalURL())
 }
 
-// go test -race -run Test_Ctx_Params
-func Test_Ctx_Params(t *testing.T) {
+// go test -race -run TestContextParams
+func TestContextParams(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test/:user", func(c *Ctx) {
+	app.Get("/test/:user", func(c *Context) {
 		utils.AssertEqual(t, "john", c.Params("user"))
 	})
-	app.Get("/test2/*", func(c *Ctx) {
+	app.Get("/test2/*", func(c *Context) {
 		utils.AssertEqual(t, "im/a/cookie", c.Params("*"))
 	})
-	app.Get("/test3/:optional?", func(c *Ctx) {
+	app.Get("/test3/:optional?", func(c *Context) {
 		utils.AssertEqual(t, "", c.Params("optional"))
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test/john", nil))
@@ -868,8 +864,8 @@ func Test_Ctx_Params(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Params -benchmem -count=4
 func Benchmark_Ctx_Params(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.route = &Route{
 		Params: []string{
 			"param1", "param2", "param3", "param4",
@@ -890,11 +886,11 @@ func Benchmark_Ctx_Params(b *testing.B) {
 	utils.AssertEqual(b, "awesome", res)
 }
 
-// go test -run Test_Ctx_Path
-func Test_Ctx_Path(t *testing.T) {
+// go test -run TestContextPath
+func TestContextPath(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test/:user", func(c *Ctx) {
+	app.Get("/test/:user", func(c *Context) {
 		utils.AssertEqual(t, "/test/john", c.Path())
 		// not strict && case insensitive
 		utils.AssertEqual(t, "/ABC/", c.Path("/ABC/"))
@@ -905,15 +901,15 @@ func Test_Ctx_Path(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_Protocol
-func Test_Ctx_Protocol(t *testing.T) {
+// go test -run TestContextProtocol
+func TestContextProtocol(t *testing.T) {
 	app := New()
 
 	freq := &fasthttp.RequestCtx{}
 	freq.Request.Header.Set("X-Forwarded", "invalid")
 
-	ctx := app.AcquireCtx(freq)
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(freq)
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderXForwardedProto, "https")
 	utils.AssertEqual(t, "https", ctx.Protocol())
 	ctx.Fasthttp.Request.Header.Reset()
@@ -936,8 +932,8 @@ func Test_Ctx_Protocol(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Protocol -benchmem -count=4
 func Benchmark_Ctx_Protocol(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	var res string
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -947,24 +943,24 @@ func Benchmark_Ctx_Protocol(b *testing.B) {
 	utils.AssertEqual(b, "http", res)
 }
 
-// go test -run Test_Ctx_Query
-func Test_Ctx_Query(t *testing.T) {
+// go test -run TestContextQuery
+func TestContextQuery(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.URI().SetQueryString("search=john&age=20")
 	utils.AssertEqual(t, "john", ctx.Query("search"))
 	utils.AssertEqual(t, "20", ctx.Query("age"))
 	utils.AssertEqual(t, "default", ctx.Query("unknown", "default"))
 }
 
-// go test -run Test_Ctx_Range
-func Test_Ctx_Range(t *testing.T) {
+// go test -run TestContextRange
+func TestContextRange(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	var (
 		result Range
@@ -1001,30 +997,30 @@ func Test_Ctx_Range(t *testing.T) {
 	testRange("bytes=500-700", 500, 700)
 }
 
-// go test -run Test_Ctx_Route
-func Test_Ctx_Route(t *testing.T) {
+// go test -run TestContextRoute
+func TestContextRoute(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test", func(c *Ctx) {
+	app.Get("/test", func(c *Context) {
 		utils.AssertEqual(t, "/test", c.Route().Path)
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	utils.AssertEqual(t, "/", ctx.Route().Path)
 	utils.AssertEqual(t, MethodGet, ctx.Route().Method)
 	utils.AssertEqual(t, 0, len(ctx.Route().Handlers))
 }
 
-// go test -run Test_Ctx_RouteNormalized
-func Test_Ctx_RouteNormalized(t *testing.T) {
+// go test -run TestContextRouteNormalized
+func TestContextRouteNormalized(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test", func(c *Ctx) {
+	app.Get("/test", func(c *Context) {
 		utils.AssertEqual(t, "/test", c.Route().Path)
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "//test", nil))
@@ -1032,13 +1028,13 @@ func Test_Ctx_RouteNormalized(t *testing.T) {
 	utils.AssertEqual(t, StatusNotFound, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_SaveFile
-func Test_Ctx_SaveFile(t *testing.T) {
+// go test -run TestContextSaveFile
+func TestContextSaveFile(t *testing.T) {
 	// TODO We should clean this up
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Ctx) {
+	app.Post("/test", func(c *Context) {
 		fh, err := c.FormFile("file")
 		utils.AssertEqual(t, nil, err)
 
@@ -1073,31 +1069,31 @@ func Test_Ctx_SaveFile(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
 
-// go test -run Test_Ctx_Secure
-func Test_Ctx_Secure(t *testing.T) {
+// go test -run TestContextSecure
+func TestContextSecure(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	// TODO Add TLS conn
 	utils.AssertEqual(t, false, ctx.Secure())
 }
 
-// go test -run Test_Ctx_Stale
-func Test_Ctx_Stale(t *testing.T) {
+// go test -run TestContextStale
+func TestContextStale(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	utils.AssertEqual(t, true, ctx.Stale())
 }
 
-// go test -run Test_Ctx_Subdomains
-func Test_Ctx_Subdomains(t *testing.T) {
+// go test -run TestContextSubdomains
+func TestContextSubdomains(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.URI().SetHost("john.doe.is.awesome.google.com")
 	utils.AssertEqual(t, []string{"john", "doe"}, ctx.Subdomains(4))
 
@@ -1108,8 +1104,8 @@ func Test_Ctx_Subdomains(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Subdomains -benchmem -count=4
 func Benchmark_Ctx_Subdomains(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Fasthttp.Request.SetRequestURI("http://john.doe.google.com")
 	var res []string
 	b.ReportAllocs()
@@ -1120,12 +1116,12 @@ func Benchmark_Ctx_Subdomains(b *testing.B) {
 	utils.AssertEqual(b, []string{"john", "doe"}, res)
 }
 
-// go test -run Test_Ctx_ClearCookie
-func Test_Ctx_ClearCookie(t *testing.T) {
+// go test -run TestContextClearCookie
+func TestContextClearCookie(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderCookie, "john=doe")
 	ctx.ClearCookie("john")
 	utils.AssertEqual(t, true, strings.HasPrefix(string(ctx.Fasthttp.Response.Header.Peek(HeaderSetCookie)), "john=; expires="))
@@ -1137,12 +1133,12 @@ func Test_Ctx_ClearCookie(t *testing.T) {
 	utils.AssertEqual(t, true, strings.Contains(string(ctx.Fasthttp.Response.Header.Peek(HeaderSetCookie)), "test2=; expires="))
 }
 
-// go test -race -run Test_Ctx_Download
-func Test_Ctx_Download(t *testing.T) {
+// go test -race -run TestContextDownload
+func TestContextDownload(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	ctx.Download("ctx.go", "Awesome File!")
 
@@ -1156,8 +1152,8 @@ func Test_Ctx_Download(t *testing.T) {
 	utils.AssertEqual(t, `attachment; filename="Awesome+File%21"`, string(ctx.Fasthttp.Response.Header.Peek(HeaderContentDisposition)))
 }
 
-// go test -race -run Test_Ctx_SendFile
-func Test_Ctx_SendFile(t *testing.T) {
+// go test -race -run TestContextSendFile
+func TestContextSendFile(t *testing.T) {
 	t.Parallel()
 	app := New()
 
@@ -1172,32 +1168,32 @@ func Test_Ctx_SendFile(t *testing.T) {
 	utils.AssertEqual(t, nil, err)
 
 	// simple test case
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
 	err = ctx.SendFile("ctx.go")
 	// check expectation
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, expectFileContent, ctx.Fasthttp.Response.Body())
 	utils.AssertEqual(t, StatusOK, ctx.Fasthttp.Response.StatusCode())
-	app.ReleaseCtx(ctx)
+	app.ReleaseContext(ctx)
 
 	// test with custom error code
-	ctx = app.AcquireCtx(&fasthttp.RequestCtx{})
+	ctx = app.AcquireContext(&fasthttp.RequestCtx{})
 	err = ctx.Status(StatusInternalServerError).SendFile("ctx.go")
 	// check expectation
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, expectFileContent, ctx.Fasthttp.Response.Body())
 	utils.AssertEqual(t, StatusInternalServerError, ctx.Fasthttp.Response.StatusCode())
-	app.ReleaseCtx(ctx)
+	app.ReleaseContext(ctx)
 
 	// test not modified
-	ctx = app.AcquireCtx(&fasthttp.RequestCtx{})
+	ctx = app.AcquireContext(&fasthttp.RequestCtx{})
 	ctx.Fasthttp.Request.Header.Set(HeaderIfModifiedSince, fI.ModTime().Format(time.RFC1123))
 	err = ctx.SendFile("ctx.go")
 	// check expectation
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, StatusNotModified, ctx.Fasthttp.Response.StatusCode())
 	utils.AssertEqual(t, []byte(nil), ctx.Fasthttp.Response.Body())
-	app.ReleaseCtx(ctx)
+	app.ReleaseContext(ctx)
 
 	// test 404
 	// ctx = app.AcquireCtx(&fasthttp.RequestCtx{})
@@ -1207,11 +1203,11 @@ func Test_Ctx_SendFile(t *testing.T) {
 	// app.ReleaseCtx(ctx)
 }
 
-// go test -race -run Test_Ctx_SendFile_Immutable
-func Test_Ctx_SendFile_Immutable(t *testing.T) {
+// go test -race -run TestContextSendFile_Immutable
+func TestContextSendFile_Immutable(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/:file", func(c *Ctx) {
+	app.Get("/:file", func(c *Context) {
 		file := c.Params("file")
 		if err := c.SendFile("./.github/" + file + ".html"); err != nil {
 			utils.AssertEqual(t, nil, err)
@@ -1229,12 +1225,12 @@ func Test_Ctx_SendFile_Immutable(t *testing.T) {
 	utils.AssertEqual(t, StatusOK, resp.StatusCode)
 }
 
-// go test -run Test_Ctx_JSON
-func Test_Ctx_JSON(t *testing.T) {
+// go test -run TestContextJSON
+func TestContextJSON(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	utils.AssertEqual(t, true, ctx.JSON(complex(1, 1)) != nil)
 
@@ -1260,8 +1256,8 @@ func Test_Ctx_JSON(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_JSON -benchmem -count=4
 func Benchmark_Ctx_JSON(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	type SomeStruct struct {
 		Name string
 		Age  uint8
@@ -1280,12 +1276,12 @@ func Benchmark_Ctx_JSON(b *testing.B) {
 	utils.AssertEqual(b, `{"Name":"Grame","Age":20}`, string(c.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_JSONP
-func Test_Ctx_JSONP(t *testing.T) {
+// go test -run TestContextJSONP
+func TestContextJSONP(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	utils.AssertEqual(t, true, ctx.JSONP(complex(1, 1)) != nil)
 
@@ -1307,8 +1303,8 @@ func Test_Ctx_JSONP(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_JSONP -benchmem -count=4
 func Benchmark_Ctx_JSONP(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	type SomeStruct struct {
 		Name string
 		Age  uint8
@@ -1328,12 +1324,12 @@ func Benchmark_Ctx_JSONP(b *testing.B) {
 	utils.AssertEqual(b, `emit({"Name":"Grame","Age":20});`, string(c.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_Links
-func Test_Ctx_Links(t *testing.T) {
+// go test -run TestContextLinks
+func TestContextLinks(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	ctx.Links()
 	utils.AssertEqual(t, "", string(ctx.Fasthttp.Response.Header.Peek(HeaderLink)))
@@ -1348,8 +1344,8 @@ func Test_Ctx_Links(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_Links -benchmem -count=4
 func Benchmark_Ctx_Links(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -1360,23 +1356,23 @@ func Benchmark_Ctx_Links(b *testing.B) {
 	}
 }
 
-// go test -run Test_Ctx_Location
-func Test_Ctx_Location(t *testing.T) {
+// go test -run TestContextLocation
+func TestContextLocation(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Location("http://example.com")
 	utils.AssertEqual(t, "http://example.com", string(ctx.Fasthttp.Response.Header.Peek(HeaderLocation)))
 }
 
-// go test -run Test_Ctx_Next
-func Test_Ctx_Next(t *testing.T) {
+// go test -run TestContextNext
+func TestContextNext(t *testing.T) {
 	app := New()
-	app.Use("/", func(c *Ctx) {
+	app.Use("/", func(c *Context) {
 		c.Next()
 	})
-	app.Get("/test", func(c *Ctx) {
+	app.Get("/test", func(c *Context) {
 		c.Set("X-Next-Result", "Works")
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "http://example.com/test", nil))
@@ -1385,10 +1381,10 @@ func Test_Ctx_Next(t *testing.T) {
 	utils.AssertEqual(t, "Works", resp.Header.Get("X-Next-Result"))
 }
 
-// go test -run Test_Ctx_Next_Error
-func Test_Ctx_Next_Error(t *testing.T) {
+// go test -run TestContextNext_Error
+func TestContextNext_Error(t *testing.T) {
 	app := New()
-	app.Use("/", func(c *Ctx) {
+	app.Use("/", func(c *Context) {
 		c.Set("X-Next-Result", "Works")
 		c.Next(ErrNotFound)
 	})
@@ -1399,12 +1395,12 @@ func Test_Ctx_Next_Error(t *testing.T) {
 	utils.AssertEqual(t, "Works", resp.Header.Get("X-Next-Result"))
 }
 
-// go test -run Test_Ctx_Redirect
-func Test_Ctx_Redirect(t *testing.T) {
+// go test -run TestContextRedirect
+func TestContextRedirect(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	ctx.Redirect("http://default.com")
 	utils.AssertEqual(t, 302, ctx.Fasthttp.Response.StatusCode())
@@ -1415,12 +1411,12 @@ func Test_Ctx_Redirect(t *testing.T) {
 	utils.AssertEqual(t, "http://example.com", string(ctx.Fasthttp.Response.Header.Peek(HeaderLocation)))
 }
 
-// go test -run Test_Ctx_Render
-func Test_Ctx_Render(t *testing.T) {
+// go test -run TestContextRender
+func TestContextRender(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	err := ctx.Render("./.github/TEST_DATA/template.html", Map{
 		"Title": "Hello, World!",
 	})
@@ -1450,14 +1446,14 @@ func (t *testTemplateEngine) Load() error {
 	return nil
 }
 
-// go test -run Test_Ctx_Render_Engine
-func Test_Ctx_Render_Engine(t *testing.T) {
+// go test -run TestContextRender_Engine
+func TestContextRender_Engine(t *testing.T) {
 	engine := &testTemplateEngine{}
 	engine.Load()
 	app := New()
 	app.Settings.Views = engine
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	err := ctx.Render("index.tmpl", Map{
 		"Title": "Hello, World!",
 	})
@@ -1471,8 +1467,8 @@ func Benchmark_Ctx_Render_Engine(b *testing.B) {
 	utils.AssertEqual(b, nil, err)
 	app := New()
 	app.Settings.Views = engine
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -1484,8 +1480,8 @@ func Benchmark_Ctx_Render_Engine(b *testing.B) {
 	utils.AssertEqual(b, "<h1>Hello, World!</h1>", string(ctx.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_Render_Go_Template
-func Test_Ctx_Render_Go_Template(t *testing.T) {
+// go test -run TestContextRender_Go_Template
+func TestContextRender_Go_Template(t *testing.T) {
 	t.Parallel()
 	file, err := ioutil.TempFile(os.TempDir(), "fiber")
 	utils.AssertEqual(t, nil, err)
@@ -1495,19 +1491,19 @@ func Test_Ctx_Render_Go_Template(t *testing.T) {
 	err = file.Close()
 	utils.AssertEqual(t, nil, err)
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	err = ctx.Render(file.Name(), nil)
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, "template", string(ctx.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_Send
-func Test_Ctx_Send(t *testing.T) {
+// go test -run TestContextSend
+func TestContextSend(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Send([]byte("Hello, World"))
 	ctx.Send("Don't crash please")
 	ctx.Send(1337)
@@ -1517,8 +1513,8 @@ func Test_Ctx_Send(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_Send -benchmem -count=4
 func Benchmark_Ctx_Send(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	var str = "Hello, World!"
 	var byt = []byte("Hello, World!")
 	var nmb = 123
@@ -1534,12 +1530,12 @@ func Benchmark_Ctx_Send(b *testing.B) {
 	utils.AssertEqual(b, "true", string(c.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_SendBytes
-func Test_Ctx_SendBytes(t *testing.T) {
+// go test -run TestContextSendBytes
+func TestContextSendBytes(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.SendBytes([]byte("Hello, World!"))
 	utils.AssertEqual(t, "Hello, World!", string(ctx.Fasthttp.Response.Body()))
 }
@@ -1547,8 +1543,8 @@ func Test_Ctx_SendBytes(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_Benchmark_Ctx_SendBytes -benchmem -count=4
 func Benchmark_Ctx_SendBytes(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	var byt = []byte("Hello, World!")
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -1558,33 +1554,33 @@ func Benchmark_Ctx_SendBytes(b *testing.B) {
 	utils.AssertEqual(b, "Hello, World!", string(c.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_SendStatus
-func Test_Ctx_SendStatus(t *testing.T) {
+// go test -run TestContextSendStatus
+func TestContextSendStatus(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.SendStatus(415)
 	utils.AssertEqual(t, 415, ctx.Fasthttp.Response.StatusCode())
 	utils.AssertEqual(t, "Unsupported Media Type", string(ctx.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_SendString
-func Test_Ctx_SendString(t *testing.T) {
+// go test -run TestContextSendString
+func TestContextSendString(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.SendString("Don't crash please")
 	utils.AssertEqual(t, "Don't crash please", string(ctx.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_SendStream
-func Test_Ctx_SendStream(t *testing.T) {
+// go test -run TestContextSendStream
+func TestContextSendStream(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 
 	ctx.SendStream(bytes.NewReader([]byte("Don't crash please")))
 	utils.AssertEqual(t, "Don't crash please", string(ctx.Fasthttp.Response.Body()))
@@ -1601,12 +1597,12 @@ func Test_Ctx_SendStream(t *testing.T) {
 	utils.AssertEqual(t, true, (ctx.Fasthttp.Response.Header.ContentLength() > 200))
 }
 
-// go test -run Test_Ctx_Set
-func Test_Ctx_Set(t *testing.T) {
+// go test -run TestContextSet
+func TestContextSet(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Set("X-1", "1")
 	ctx.Set("X-2", "2")
 	ctx.Set("X-3", "3")
@@ -1616,12 +1612,12 @@ func Test_Ctx_Set(t *testing.T) {
 	utils.AssertEqual(t, "1337", string(ctx.Fasthttp.Response.Header.Peek("x-3")))
 }
 
-// go test -run Test_Ctx_Status
-func Test_Ctx_Status(t *testing.T) {
+// go test -run TestContextStatus
+func TestContextStatus(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Status(400)
 	utils.AssertEqual(t, 400, ctx.Fasthttp.Response.StatusCode())
 	ctx.Status(415).Send("Hello, World")
@@ -1629,12 +1625,12 @@ func Test_Ctx_Status(t *testing.T) {
 	utils.AssertEqual(t, "Hello, World", string(ctx.Fasthttp.Response.Body()))
 }
 
-// go test -run Test_Ctx_Type
-func Test_Ctx_Type(t *testing.T) {
+// go test -run TestContextType
+func TestContextType(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Type(".json")
 	utils.AssertEqual(t, "application/json", string(ctx.Fasthttp.Response.Header.Peek("Content-Type")))
 
@@ -1651,8 +1647,8 @@ func Test_Ctx_Type(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_Type -benchmem -count=4
 func Benchmark_Ctx_Type(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -1664,8 +1660,8 @@ func Benchmark_Ctx_Type(b *testing.B) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_Type_Charset -benchmem -count=4
 func Benchmark_Ctx_Type_Charset(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -1674,12 +1670,12 @@ func Benchmark_Ctx_Type_Charset(b *testing.B) {
 	}
 }
 
-// go test -run Test_Ctx_Vary
-func Test_Ctx_Vary(t *testing.T) {
+// go test -run TestContextVary
+func TestContextVary(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Vary("Origin")
 	ctx.Vary("User-Agent")
 	ctx.Vary("Accept-Encoding", "Accept")
@@ -1689,8 +1685,8 @@ func Test_Ctx_Vary(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_Vary -benchmem -count=4
 func Benchmark_Ctx_Vary(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -1698,12 +1694,12 @@ func Benchmark_Ctx_Vary(b *testing.B) {
 	}
 }
 
-// go test -run Test_Ctx_Write
-func Test_Ctx_Write(t *testing.T) {
+// go test -run TestContextWrite
+func TestContextWrite(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Write("Hello, ")
 	ctx.Write([]byte("World! "))
 	ctx.Write(123)
@@ -1716,8 +1712,8 @@ func Test_Ctx_Write(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_Ctx_Write -benchmem -count=4
 func Benchmark_Ctx_Write(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	var str = "Hello, World!"
 	var byt = []byte("Hello, World!")
 	var nmb = 123
@@ -1732,12 +1728,12 @@ func Benchmark_Ctx_Write(b *testing.B) {
 	}
 }
 
-// go test -run Test_Ctx_XHR
-func Test_Ctx_XHR(t *testing.T) {
+// go test -run TestContextXHR
+func TestContextXHR(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Fasthttp.Request.Header.Set(HeaderXRequestedWith, "XMLHttpRequest")
 	utils.AssertEqual(t, true, ctx.XHR())
 }
@@ -1745,8 +1741,8 @@ func Test_Ctx_XHR(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_SendString_B -benchmem -count=4
 func Benchmark_Ctx_SendString_B(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	body := "Hello, world!"
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -1759,8 +1755,8 @@ func Benchmark_Ctx_SendString_B(b *testing.B) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_SendBytes_B -benchmem -count=4
 func Benchmark_Ctx_SendBytes_B(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	body := []byte("Hello, world!")
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -1770,12 +1766,12 @@ func Benchmark_Ctx_SendBytes_B(b *testing.B) {
 	utils.AssertEqual(b, []byte("Hello, world!"), c.Fasthttp.Response.Body())
 }
 
-// go test -run Benchmark_Ctx_QueryParser
-func Test_Ctx_QueryParser(t *testing.T) {
+// go test -run TestContextQueryParser
+func TestContextQueryParser(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	type Query struct {
 		ID    int
 		Name  string
@@ -1797,8 +1793,8 @@ func Test_Ctx_QueryParser(t *testing.T) {
 // go test -v  -run=^$ -bench=Benchmark_Ctx_QueryParser -benchmem -count=4
 func Benchmark_Ctx_QueryParser(b *testing.B) {
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	type Query struct {
 		ID    int
 		Name  string
@@ -1816,12 +1812,12 @@ func Benchmark_Ctx_QueryParser(b *testing.B) {
 	utils.AssertEqual(b, nil, ctx.QueryParser(q))
 }
 
-// go test -run Test_Ctx_Error
-func Test_Ctx_Error(t *testing.T) {
+// go test -run TestContextError
+func TestContextError(t *testing.T) {
 	t.Parallel()
 	app := New()
-	ctx := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(ctx)
+	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(ctx)
 	ctx.Next(fmt.Errorf("Hi I'm an error!"))
 	utils.AssertEqual(t, "Hi I'm an error!", ctx.Error().Error())
 }

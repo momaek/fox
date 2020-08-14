@@ -1,7 +1,3 @@
-// ⚡️ Fiber is an Express inspired web framework written in Go with ☕️
-// 🤖 Github Repository: https://github.com/gofiber/fiber
-// 📌 API Documentation: https://docs.gofiber.io
-
 package engine
 
 import (
@@ -19,8 +15,8 @@ import (
 	"time"
 
 	"fox/engine/utils"
-	fasthttp "github.com/valyala/fasthttp"
-	fasthttputil "github.com/valyala/fasthttp/fasthttputil"
+	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 func testStatus200(t *testing.T, app *App, url string, method string) {
@@ -34,11 +30,11 @@ func testStatus200(t *testing.T, app *App, url string, method string) {
 func Test_App_MethodNotAllowed(t *testing.T) {
 	app := New()
 
-	app.Use(func(ctx *Ctx) { ctx.Next() })
+	app.Use(func(ctx *Context) { ctx.Next() })
 
-	app.Post("/", func(c *Ctx) {})
+	app.Post("/", func(c *Context) {})
 
-	app.Options("/", func(c *Ctx) {})
+	app.Options("/", func(c *Context) {})
 
 	resp, err := app.Test(httptest.NewRequest("POST", "/", nil))
 	utils.AssertEqual(t, nil, err)
@@ -60,7 +56,7 @@ func Test_App_MethodNotAllowed(t *testing.T) {
 	utils.AssertEqual(t, 405, resp.StatusCode)
 	utils.AssertEqual(t, "POST, OPTIONS", resp.Header.Get(HeaderAllow))
 
-	app.Get("/", func(c *Ctx) {})
+	app.Get("/", func(c *Context) {})
 
 	resp, err = app.Test(httptest.NewRequest("TRACE", "/", nil))
 	utils.AssertEqual(t, nil, err)
@@ -81,22 +77,22 @@ func Test_App_MethodNotAllowed(t *testing.T) {
 func Test_App_Custom_Middleware_404_Should_Not_SetMethodNotAllowed(t *testing.T) {
 	app := New()
 
-	app.Use(func(ctx *Ctx) {
+	app.Use(func(ctx *Context) {
 		ctx.Status(404)
 	})
 
-	app.Post("/", func(c *Ctx) {})
+	app.Post("/", func(c *Context) {})
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, 404, resp.StatusCode)
 
-	g := app.Group("/with-next", func(ctx *Ctx) {
+	g := app.Group("/with-next", func(ctx *Context) {
 		ctx.Status(404)
 		ctx.Next()
 	})
 
-	g.Post("/", func(c *Ctx) {})
+	g.Post("/", func(c *Context) {})
 
 	resp, err = app.Test(httptest.NewRequest("GET", "/with-next", nil))
 	utils.AssertEqual(t, nil, err)
@@ -109,7 +105,7 @@ func Test_App_ServerErrorHandler_SmallReadBuffer(t *testing.T) {
 	)
 	app := New()
 
-	app.Get("/", func(c *Ctx) {
+	app.Get("/", func(c *Context) {
 		panic(errors.New("should never called"))
 	})
 
@@ -135,7 +131,7 @@ func Test_App_ErrorHandler(t *testing.T) {
 		BodyLimit: 4,
 	})
 
-	app.Get("/", func(c *Ctx) {
+	app.Get("/", func(c *Context) {
 		c.Next(errors.New("hi, i'm an error"))
 	})
 
@@ -155,12 +151,12 @@ func Test_App_ErrorHandler(t *testing.T) {
 
 func Test_App_ErrorHandler_Custom(t *testing.T) {
 	app := New(&Settings{
-		ErrorHandler: func(ctx *Ctx, err error) {
+		ErrorHandler: func(ctx *Context, err error) {
 			ctx.Status(200).SendString("hi, i'm an custom error")
 		},
 	})
 
-	app.Get("/", func(c *Ctx) {
+	app.Get("/", func(c *Context) {
 		c.Next(errors.New("hi, i'm an error"))
 	})
 
@@ -176,16 +172,16 @@ func Test_App_ErrorHandler_Custom(t *testing.T) {
 func Test_App_Nested_Params(t *testing.T) {
 	app := New()
 
-	app.Get("/test", func(c *Ctx) {
+	app.Get("/test", func(c *Context) {
 		c.Status(400).Send("Should move on")
 	})
-	app.Get("/test/:param", func(c *Ctx) {
+	app.Get("/test/:param", func(c *Context) {
 		c.Status(400).Send("Should move on")
 	})
-	app.Get("/test/:param/test", func(c *Ctx) {
+	app.Get("/test/:param/test", func(c *Context) {
 		c.Status(400).Send("Should move on")
 	})
-	app.Get("/test/:param/test/:param2", func(c *Ctx) {
+	app.Get("/test/:param/test/:param2", func(c *Context) {
 		c.Status(200).Send("Good job")
 	})
 
@@ -199,15 +195,15 @@ func Test_App_Nested_Params(t *testing.T) {
 func Test_App_Use_Params(t *testing.T) {
 	app := New()
 
-	app.Use("/prefix/:param", func(c *Ctx) {
+	app.Use("/prefix/:param", func(c *Context) {
 		utils.AssertEqual(t, "john", c.Params("param"))
 	})
 
-	app.Use("/foo/:bar?", func(c *Ctx) {
+	app.Use("/foo/:bar?", func(c *Context) {
 		utils.AssertEqual(t, "foobar", c.Params("bar", "foobar"))
 	})
 
-	app.Use("/:param/*", func(c *Ctx) {
+	app.Use("/:param/*", func(c *Context) {
 		utils.AssertEqual(t, "john", c.Params("param"))
 		utils.AssertEqual(t, "doe", c.Params("*"))
 	})
@@ -242,7 +238,7 @@ func Test_App_Add_Method_Test(t *testing.T) {
 			utils.AssertEqual(t, "add: invalid http method JOHN\n", fmt.Sprintf("%v", err))
 		}
 	}()
-	app.Add("JOHN", "/doe", func(c *Ctx) {
+	app.Add("JOHN", "/doe", func(c *Context) {
 
 	})
 }
@@ -289,10 +285,10 @@ func Test_App_Use_Params_Group(t *testing.T) {
 	app := New()
 
 	group := app.Group("/prefix/:param/*")
-	group.Use("/", func(c *Ctx) {
+	group.Use("/", func(c *Context) {
 		c.Next()
 	})
-	group.Get("/test", func(c *Ctx) {
+	group.Get("/test", func(c *Context) {
 		utils.AssertEqual(t, "john", c.Params("param"))
 		utils.AssertEqual(t, "doe", c.Params("*"))
 	})
@@ -303,11 +299,11 @@ func Test_App_Use_Params_Group(t *testing.T) {
 }
 
 func Test_App_Chaining(t *testing.T) {
-	n := func(c *Ctx) {
+	n := func(c *Context) {
 		c.Next()
 	}
 	app := New()
-	app.Use("/john", n, n, n, n, func(c *Ctx) {
+	app.Use("/john", n, n, n, n, func(c *Context) {
 		c.Status(202)
 	})
 	// check handler count for registered HEAD route
@@ -319,7 +315,7 @@ func Test_App_Chaining(t *testing.T) {
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 202, resp.StatusCode, "Status code")
 
-	app.Get("/test", n, n, n, n, func(c *Ctx) {
+	app.Get("/test", n, n, n, n, func(c *Context) {
 		c.Status(203)
 	})
 
@@ -334,17 +330,17 @@ func Test_App_Chaining(t *testing.T) {
 func Test_App_Order(t *testing.T) {
 	app := New()
 
-	app.Get("/test", func(c *Ctx) {
+	app.Get("/test", func(c *Context) {
 		c.Write("1")
 		c.Next()
 	})
 
-	app.All("/test", func(c *Ctx) {
+	app.All("/test", func(c *Context) {
 		c.Write("2")
 		c.Next()
 	})
 
-	app.Use(func(c *Ctx) {
+	app.Use(func(c *Context) {
 		c.Write("3")
 	})
 
@@ -359,7 +355,7 @@ func Test_App_Order(t *testing.T) {
 	utils.AssertEqual(t, "123", string(body))
 }
 func Test_App_Methods(t *testing.T) {
-	var dummyHandler = func(c *Ctx) {}
+	var dummyHandler = func(c *Context) {}
 
 	app := New()
 
@@ -400,14 +396,14 @@ func Test_App_Methods(t *testing.T) {
 
 func Test_App_New(t *testing.T) {
 	app := New()
-	app.Get("/", func(*Ctx) {
+	app.Get("/", func(*Context) {
 
 	})
 
 	appConfig := New(&Settings{
 		Immutable: true,
 	})
-	appConfig.Get("/", func(*Ctx) {
+	appConfig.Get("/", func(*Context) {
 
 	})
 }
@@ -481,7 +477,7 @@ func Test_App_Static_Direct(t *testing.T) {
 func Test_App_Static_Group(t *testing.T) {
 	app := New()
 
-	grp := app.Group("/v1", func(c *Ctx) {
+	grp := app.Group("/v1", func(c *Context) {
 		c.Set("Test-Header", "123")
 		c.Next()
 	})
@@ -586,13 +582,13 @@ func Test_App_Mixed_Routes_WithSameLen(t *testing.T) {
 	app := New()
 
 	// middleware
-	app.Use(func(ctx *Ctx) {
+	app.Use(func(ctx *Context) {
 		ctx.Set("TestHeader", "TestValue")
 		ctx.Next()
 	})
 	// routes with the same length
 	app.Static("/tesbar", "./.github")
-	app.Get("/foobar", func(ctx *Ctx) {
+	app.Get("/foobar", func(ctx *Context) {
 		ctx.Send("FOO_BAR")
 		ctx.Type("html")
 	})
@@ -635,7 +631,7 @@ func Test_App_Group_Invalid(t *testing.T) {
 }
 
 func Test_App_Group(t *testing.T) {
-	var dummyHandler = func(c *Ctx) {}
+	var dummyHandler = func(c *Context) {}
 
 	app := New()
 
@@ -693,7 +689,7 @@ func Test_App_Group(t *testing.T) {
 
 func Test_App_Deep_Group(t *testing.T) {
 	runThroughCount := 0
-	var dummyHandler = func(c *Ctx) {
+	var dummyHandler = func(c *Context) {
 		runThroughCount++
 		c.Next()
 	}
@@ -702,7 +698,7 @@ func Test_App_Deep_Group(t *testing.T) {
 	gAPI := app.Group("/api", dummyHandler)
 	gV1 := gAPI.Group("/v1", dummyHandler)
 	gUser := gV1.Group("/user", dummyHandler)
-	gUser.Get("/authenticate", func(ctx *Ctx) {
+	gUser.Get("/authenticate", func(ctx *Context) {
 		runThroughCount++
 		ctx.SendStatus(200)
 	})
@@ -715,7 +711,7 @@ func Test_App_Next_Method(t *testing.T) {
 	app := New()
 	app.Settings.DisableStartupMessage = true
 
-	app.Use(func(c *Ctx) {
+	app.Use(func(c *Context) {
 		utils.AssertEqual(t, "GET", c.Method())
 		c.Next()
 		utils.AssertEqual(t, "GET", c.Method())
@@ -767,8 +763,8 @@ func Test_App_Listener(t *testing.T) {
 // go test -v -run=^$ -bench=Benchmark_App_ETag -benchmem -count=4
 func Benchmark_App_ETag(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Send("Hello, World!")
 	for n := 0; n < b.N; n++ {
 		setETag(c, false)
@@ -779,8 +775,8 @@ func Benchmark_App_ETag(b *testing.B) {
 // go test -v -run=^$ -bench=Benchmark_App_ETag_Weak -benchmem -count=4
 func Benchmark_App_ETag_Weak(b *testing.B) {
 	app := New()
-	c := app.AcquireCtx(&fasthttp.RequestCtx{})
-	defer app.ReleaseCtx(c)
+	c := app.AcquireContext(&fasthttp.RequestCtx{})
+	defer app.ReleaseContext(c)
 	c.Send("Hello, World!")
 	for n := 0; n < b.N; n++ {
 		setETag(c, true)
@@ -799,13 +795,13 @@ func Test_Test_Timeout(t *testing.T) {
 	app := New()
 	app.Settings.DisableStartupMessage = true
 
-	app.Get("/", func(_ *Ctx) {})
+	app.Get("/", func(_ *Context) {})
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/", nil), -1)
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
-	app.Get("timeout", func(c *Ctx) {
+	app.Get("timeout", func(c *Context) {
 		time.Sleep(55 * time.Millisecond)
 	})
 
