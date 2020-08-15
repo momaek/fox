@@ -305,7 +305,7 @@ func (app *Engine) registerStatic(prefix, root string, config ...Static) Route {
 		root: isRoot,
 		path: prefix,
 		// Public data
-		Method:   MethodGet,
+		Method:   "GET",
 		Path:     prefix,
 		Handlers: []Handler{handler},
 	}
@@ -314,10 +314,10 @@ func (app *Engine) registerStatic(prefix, root string, config ...Static) Route {
 	app.handlerCount++
 	app.mutex.Unlock()
 	// Add route to stack
-	app.addRoute(MethodGet, &route)
+	app.addRoute("GET", &route)
 	// Add HEAD route
 	headRoute := route
-	app.addRoute(MethodHead, &headRoute)
+	app.addRoute("HEAD", &headRoute)
 	return route
 }
 

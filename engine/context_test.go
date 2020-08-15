@@ -596,7 +596,7 @@ func TestContextFormFile(t *testing.T) {
 
 	writer.Close()
 
-	req := httptest.NewRequest(MethodPost, "/test", body)
+	req := httptest.NewRequest("POST", "/test", body)
 	req.Header.Set(HeaderContentType, writer.FormDataContentType())
 	req.Header.Set(HeaderContentLength, strconv.Itoa(len(body.Bytes())))
 
@@ -620,7 +620,7 @@ func TestContextFormValue(t *testing.T) {
 	utils.AssertEqual(t, nil, writer.WriteField("name", "john"))
 
 	writer.Close()
-	req := httptest.NewRequest(MethodPost, "/test", body)
+	req := httptest.NewRequest("POST", "/test", body)
 	req.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
 	req.Header.Set("Content-Length", strconv.Itoa(len(body.Bytes())))
 
@@ -781,7 +781,7 @@ func TestContextLocals(t *testing.T) {
 	app.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "doe", c.Locals("john"))
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
@@ -790,16 +790,16 @@ func TestContextLocals(t *testing.T) {
 func TestContextMethod(t *testing.T) {
 	t.Parallel()
 	fctx := &fasthttp.RequestCtx{}
-	fctx.Request.Header.SetMethod(MethodGet)
+	fctx.Request.Header.SetMethod("GET")
 	app := New()
 	ctx := app.AcquireContext(fctx)
 	defer app.ReleaseContext(ctx)
-	utils.AssertEqual(t, MethodGet, ctx.Method())
-	ctx.Method(MethodPost)
-	utils.AssertEqual(t, MethodPost, ctx.Method())
+	utils.AssertEqual(t, "GET", ctx.Method())
+	ctx.Method("POST")
+	utils.AssertEqual(t, "POST", ctx.Method())
 
 	ctx.Method("MethodInvalid")
-	utils.AssertEqual(t, MethodPost, ctx.Method())
+	utils.AssertEqual(t, "POST", ctx.Method())
 }
 
 // go test -run TestContextMultipartForm
@@ -819,7 +819,7 @@ func TestContextMultipartForm(t *testing.T) {
 	utils.AssertEqual(t, nil, writer.WriteField("name", "john"))
 
 	writer.Close()
-	req := httptest.NewRequest(MethodPost, "/test", body)
+	req := httptest.NewRequest("POST", "/test", body)
 	req.Header.Set(HeaderContentType, fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
 	req.Header.Set(HeaderContentLength, strconv.Itoa(len(body.Bytes())))
 
@@ -851,13 +851,13 @@ func TestContextParams(t *testing.T) {
 	app.GET("/test3/:optional?", func(c *Context) {
 		utils.AssertEqual(t, "", c.Params("optional"))
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test/john", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/test/john", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/test2/im/a/cookie", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/test2/im/a/cookie", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/test3", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/test3", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
@@ -897,7 +897,7 @@ func TestContextPath(t *testing.T) {
 		utils.AssertEqual(t, "/ABC/", c.Path("/ABC/"))
 		utils.AssertEqual(t, "/test/john/", c.Path("/test/john/"))
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test/john", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/test/john", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 }
@@ -1005,7 +1005,7 @@ func TestContextRoute(t *testing.T) {
 	app.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "/test", c.Route().Path)
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 
@@ -1013,7 +1013,7 @@ func TestContextRoute(t *testing.T) {
 	defer app.ReleaseContext(ctx)
 
 	utils.AssertEqual(t, "/", ctx.Route().Path)
-	utils.AssertEqual(t, MethodGet, ctx.Route().Method)
+	utils.AssertEqual(t, "GET", ctx.Route().Method)
 	utils.AssertEqual(t, 0, len(ctx.Route().Handlers))
 }
 
@@ -1024,7 +1024,7 @@ func TestContextRouteNormalized(t *testing.T) {
 	app.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "/test", c.Route().Path)
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "//test", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "//test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusNotFound, resp.StatusCode, "Status code")
 }
@@ -1061,7 +1061,7 @@ func TestContextSaveFile(t *testing.T) {
 	utils.AssertEqual(t, nil, err)
 	writer.Close()
 
-	req := httptest.NewRequest(MethodPost, "/test", body)
+	req := httptest.NewRequest("POST", "/test", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Content-Length", strconv.Itoa(len(body.Bytes())))
 
@@ -1376,7 +1376,7 @@ func TestContextNext(t *testing.T) {
 	app.GET("/test", func(c *Context) {
 		c.Set("X-Next-Result", "Works")
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "http://example.com/test", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "http://example.com/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 	utils.AssertEqual(t, "Works", resp.Header.Get("X-Next-Result"))
@@ -1390,7 +1390,7 @@ func TestContextNext_Error(t *testing.T) {
 		c.Next(ErrNotFound)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "http://example.com/test", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "http://example.com/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusNotFound, resp.StatusCode, "Status code")
 	utils.AssertEqual(t, "Works", resp.Header.Get("X-Next-Result"))

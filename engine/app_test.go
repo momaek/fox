@@ -307,7 +307,7 @@ func Test_App_Chaining(t *testing.T) {
 		c.Status(202)
 	})
 	// check handler count for registered HEAD route
-	utils.AssertEqual(t, 5, len(app.stack[methodInt(MethodHead)][0].Handlers), "app.Test(req)")
+	utils.AssertEqual(t, 5, len(app.stack[methodInt("HEAD")][0].Handlers), "app.Test(req)")
 
 	req := httptest.NewRequest("POST", "/john", nil)
 

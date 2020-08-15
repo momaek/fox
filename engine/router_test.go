@@ -33,7 +33,7 @@ func Test_Route_Match_SameLength(t *testing.T) {
 		ctx.Send(ctx.Params("param"))
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/:param", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/:param", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -42,7 +42,7 @@ func Test_Route_Match_SameLength(t *testing.T) {
 	utils.AssertEqual(t, ":param", getString(body))
 
 	// with param
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/test", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -58,7 +58,7 @@ func Test_Route_Match_Star(t *testing.T) {
 		ctx.Send(ctx.Params("*"))
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/*", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/*", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -67,7 +67,7 @@ func Test_Route_Match_Star(t *testing.T) {
 	utils.AssertEqual(t, "*", getString(body))
 
 	// with param
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/test", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -83,7 +83,7 @@ func Test_Route_Match_Root(t *testing.T) {
 		ctx.Send("root")
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -101,7 +101,7 @@ func Test_Route_Match_Parser(t *testing.T) {
 	app.GET("/Foobar/*", func(ctx *Context) {
 		ctx.Send(ctx.Params("*"))
 	})
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/foo/bar", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/foo/bar", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -110,7 +110,7 @@ func Test_Route_Match_Parser(t *testing.T) {
 	utils.AssertEqual(t, "bar", getString(body))
 
 	// with star
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/Foobar/test", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/Foobar/test", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -126,7 +126,7 @@ func Test_Route_Match_Middleware(t *testing.T) {
 		ctx.Send(ctx.Params("*"))
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/foo/*", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/foo/*", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -135,7 +135,7 @@ func Test_Route_Match_Middleware(t *testing.T) {
 	utils.AssertEqual(t, "*", getString(body))
 
 	// with param
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/foo/bar/fasel", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/foo/bar/fasel", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -151,7 +151,7 @@ func Test_Route_Match_UnescapedPath(t *testing.T) {
 		ctx.Send("test")
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/cr%C3%A9er", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/cr%C3%A9er", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 
@@ -159,13 +159,13 @@ func Test_Route_Match_UnescapedPath(t *testing.T) {
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, "test", getString(body))
 	// without special chars
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/créer", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/créer", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusOK, resp.StatusCode, "Status code")
 
 	// check deactivated behavior
 	app.Settings.UnescapePath = false
-	resp, err = app.Test(httptest.NewRequest(MethodGet, "/cr%C3%A9er", nil))
+	resp, err = app.Test(httptest.NewRequest("GET", "/cr%C3%A9er", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, StatusNotFound, resp.StatusCode, "Status code")
 }
@@ -177,7 +177,7 @@ func Test_Route_Match_Middleware_HasPrefix(t *testing.T) {
 		ctx.Send("middleware")
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/foo/bar", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/foo/bar", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -193,7 +193,7 @@ func Test_Route_Match_Middleware_Root(t *testing.T) {
 		ctx.Send("middleware")
 	})
 
-	resp, err := app.Test(httptest.NewRequest(MethodGet, "/everything", nil))
+	resp, err := app.Test(httptest.NewRequest("GET", "/everything", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
@@ -486,7 +486,7 @@ func Benchmark_Router_Handler_Unescape(b *testing.B) {
 
 	c := &fasthttp.RequestCtx{}
 
-	c.Request.Header.SetMethod(MethodDelete)
+	c.Request.Header.SetMethod("DELETE")
 	c.URI().SetPath("/cr%C3%A9er")
 
 	for n := 0; n < b.N; n++ {

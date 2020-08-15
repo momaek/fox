@@ -241,23 +241,23 @@ var getBytesImmutable = func(s string) (b []byte) {
 // HTTP methods and their unique INTs
 func methodInt(s string) int {
 	switch s {
-	case MethodGet:
+	case "GET":
 		return 0
-	case MethodHead:
+	case "HEAD":
 		return 1
-	case MethodPost:
+	case "POST":
 		return 2
-	case MethodPut:
+	case "PUT":
 		return 3
-	case MethodDelete:
+	case "DELETE":
 		return 4
-	case MethodConnect:
+	case "CONNECT":
 		return 5
-	case MethodOptions:
+	case "OPTIONS":
 		return 6
-	case MethodTrace:
+	case "TRACE":
 		return 7
-	case MethodPatch:
+	case "PATCH":
 		return 8
 	default:
 		return -1
@@ -266,29 +266,19 @@ func methodInt(s string) int {
 
 // HTTP methods slice
 var intMethod = []string{
-	MethodGet,
-	MethodHead,
-	MethodPost,
-	MethodPut,
-	MethodDelete,
-	MethodConnect,
-	MethodOptions,
-	MethodTrace,
-	MethodPatch,
+	"GET",
+	"HEAD",
+	"POST",
+	"PUT",
+	"DELETE",
+	"CONNECT",
+	"OPTIONS",
+	"TRACE",
+	"PATCH",
 }
 
-// HTTP methods were copied from net/http.
 const (
-	MethodGet     = "GET"     // RFC 7231, 4.3.1
-	MethodHead    = "HEAD"    // RFC 7231, 4.3.2
-	MethodPost    = "POST"    // RFC 7231, 4.3.3
-	MethodPut     = "PUT"     // RFC 7231, 4.3.4
-	MethodPatch   = "PATCH"   // RFC 5789
-	MethodDelete  = "DELETE"  // RFC 7231, 4.3.5
-	MethodConnect = "CONNECT" // RFC 7231, 4.3.6
-	MethodOptions = "OPTIONS" // RFC 7231, 4.3.7
-	MethodTrace   = "TRACE"   // RFC 7231, 4.3.8
-	methodUse     = "USE"
+	methodUse = "USE"
 )
 
 // MIME types that are commonly used
