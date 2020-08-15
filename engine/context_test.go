@@ -6,6 +6,7 @@ package engine
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -568,7 +569,7 @@ func TestContextFormFile(t *testing.T) {
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Context) {
+	app.POST("/test", func(c *Context) {
 		fh, err := c.FormFile("file")
 		utils.AssertEqual(t, nil, err)
 		utils.AssertEqual(t, "test", fh.Filename)
@@ -609,7 +610,7 @@ func TestContextFormValue(t *testing.T) {
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Context) {
+	app.POST("/test", func(c *Context) {
 		utils.AssertEqual(t, "john", c.FormValue("name"))
 	})
 
@@ -777,7 +778,7 @@ func TestContextLocals(t *testing.T) {
 		c.Locals("john", "doe")
 		c.Next()
 	})
-	app.Get("/test", func(c *Context) {
+	app.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "doe", c.Locals("john"))
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test", nil))
@@ -806,7 +807,7 @@ func TestContextMultipartForm(t *testing.T) {
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Context) {
+	app.POST("/test", func(c *Context) {
 		result, err := c.MultipartForm()
 		utils.AssertEqual(t, nil, err)
 		utils.AssertEqual(t, "john", result.Value["name"][0])
@@ -841,13 +842,13 @@ func TestContextOriginalURL(t *testing.T) {
 func TestContextParams(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test/:user", func(c *Context) {
+	app.GET("/test/:user", func(c *Context) {
 		utils.AssertEqual(t, "john", c.Params("user"))
 	})
-	app.Get("/test2/*", func(c *Context) {
+	app.GET("/test2/*", func(c *Context) {
 		utils.AssertEqual(t, "im/a/cookie", c.Params("*"))
 	})
-	app.Get("/test3/:optional?", func(c *Context) {
+	app.GET("/test3/:optional?", func(c *Context) {
 		utils.AssertEqual(t, "", c.Params("optional"))
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test/john", nil))
@@ -890,7 +891,7 @@ func Benchmark_Ctx_Params(b *testing.B) {
 func TestContextPath(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test/:user", func(c *Context) {
+	app.GET("/test/:user", func(c *Context) {
 		utils.AssertEqual(t, "/test/john", c.Path())
 		// not strict && case insensitive
 		utils.AssertEqual(t, "/ABC/", c.Path("/ABC/"))
@@ -1001,7 +1002,7 @@ func TestContextRange(t *testing.T) {
 func TestContextRoute(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test", func(c *Context) {
+	app.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "/test", c.Route().Path)
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/test", nil))
@@ -1020,7 +1021,7 @@ func TestContextRoute(t *testing.T) {
 func TestContextRouteNormalized(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/test", func(c *Context) {
+	app.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "/test", c.Route().Path)
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "//test", nil))
@@ -1034,7 +1035,7 @@ func TestContextSaveFile(t *testing.T) {
 	t.Parallel()
 	app := New()
 
-	app.Post("/test", func(c *Context) {
+	app.POST("/test", func(c *Context) {
 		fh, err := c.FormFile("file")
 		utils.AssertEqual(t, nil, err)
 
@@ -1207,7 +1208,7 @@ func TestContextSendFile(t *testing.T) {
 func TestContextSendFile_Immutable(t *testing.T) {
 	t.Parallel()
 	app := New()
-	app.Get("/:file", func(c *Context) {
+	app.GET("/:file", func(c *Context) {
 		file := c.Params("file")
 		if err := c.SendFile("./.github/" + file + ".html"); err != nil {
 			utils.AssertEqual(t, nil, err)
@@ -1372,7 +1373,7 @@ func TestContextNext(t *testing.T) {
 	app.Use("/", func(c *Context) {
 		c.Next()
 	})
-	app.Get("/test", func(c *Context) {
+	app.GET("/test", func(c *Context) {
 		c.Set("X-Next-Result", "Works")
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "http://example.com/test", nil))
@@ -1818,6 +1819,6 @@ func TestContextError(t *testing.T) {
 	app := New()
 	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
 	defer app.ReleaseContext(ctx)
-	ctx.Next(fmt.Errorf("Hi I'm an error!"))
+	ctx.Next(errors.New("Hi I'm an error"))
 	utils.AssertEqual(t, "Hi I'm an error!", ctx.Error().Error())
 }

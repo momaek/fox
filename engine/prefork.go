@@ -24,12 +24,12 @@ var (
 )
 
 // IsChild determines if the current process is a result of Prefork
-func (app *App) IsChild() bool {
+func (app *Engine) IsChild() bool {
 	return os.Getenv(envPreforkChildKey) == envPreforkChildVal
 }
 
 // prefork manages child processes to make use of the OS REUSEPORT or REUSEADDR feature
-func (app *App) prefork(addr string, tlsconfig ...*tls.Config) (err error) {
+func (app *Engine) prefork(addr string, tlsconfig ...*tls.Config) (err error) {
 	// 👶 child process 👶
 	if app.IsChild() {
 		// use 1 cpu core per child process

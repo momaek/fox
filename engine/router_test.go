@@ -29,7 +29,7 @@ func init() {
 func Test_Route_Match_SameLength(t *testing.T) {
 	app := New()
 
-	app.Get("/:param", func(ctx *Context) {
+	app.GET("/:param", func(ctx *Context) {
 		ctx.Send(ctx.Params("param"))
 	})
 
@@ -54,7 +54,7 @@ func Test_Route_Match_SameLength(t *testing.T) {
 func Test_Route_Match_Star(t *testing.T) {
 	app := New()
 
-	app.Get("/*", func(ctx *Context) {
+	app.GET("/*", func(ctx *Context) {
 		ctx.Send(ctx.Params("*"))
 	})
 
@@ -79,7 +79,7 @@ func Test_Route_Match_Star(t *testing.T) {
 func Test_Route_Match_Root(t *testing.T) {
 	app := New()
 
-	app.Get("/", func(ctx *Context) {
+	app.GET("/", func(ctx *Context) {
 		ctx.Send("root")
 	})
 
@@ -95,10 +95,10 @@ func Test_Route_Match_Root(t *testing.T) {
 func Test_Route_Match_Parser(t *testing.T) {
 	app := New()
 
-	app.Get("/foo/:Param", func(ctx *Context) {
+	app.GET("/foo/:Param", func(ctx *Context) {
 		ctx.Send(ctx.Params("Param"))
 	})
-	app.Get("/Foobar/*", func(ctx *Context) {
+	app.GET("/Foobar/*", func(ctx *Context) {
 		ctx.Send(ctx.Params("*"))
 	})
 	resp, err := app.Test(httptest.NewRequest(MethodGet, "/foo/bar", nil))
@@ -213,7 +213,7 @@ func Test_Router_Register_Missing_Handler(t *testing.T) {
 }
 
 func Test_Ensure_Router_Interface_Implementation(t *testing.T) {
-	var app interface{} = (*App)(nil)
+	var app interface{} = (*Engine)(nil)
 	_, ok := app.(Router)
 	utils.AssertEqual(t, true, ok)
 
@@ -226,7 +226,7 @@ func Test_Router_Handler_SetETag(t *testing.T) {
 	app := New()
 	app.Settings.ETag = true
 
-	app.Get("/", func(c *Context) {
+	app.GET("/", func(c *Context) {
 		c.Send("Hello, World!")
 	})
 
@@ -241,7 +241,7 @@ func Test_Router_Handler_SetETag(t *testing.T) {
 ///////////////// BENCHMARKS /////////////////
 //////////////////////////////////////////////
 
-func registerDummyRoutes(app *App) {
+func registerDummyRoutes(app *Engine) {
 	h := func(c *Context) {}
 	for _, r := range routesFixture.GithubAPI {
 		app.Add(r.Method, r.Path, h)
@@ -255,7 +255,7 @@ func Benchmark_App_MethodNotAllowed(b *testing.B) {
 		c.Send("Hello World!")
 	}
 	app.All("/this/is/a/", h)
-	app.Get("/this/is/a/dummy/route/oke", h)
+	app.GET("/this/is/a/dummy/route/oke", h)
 	c := &fasthttp.RequestCtx{}
 
 	c.Request.Header.SetMethod("DELETE")
@@ -326,7 +326,7 @@ func Benchmark_Router_Chain(b *testing.B) {
 	handler := func(c *Context) {
 		c.Next()
 	}
-	app.Get("/", handler, handler, handler, handler, handler, handler)
+	app.GET("/", handler, handler, handler, handler, handler, handler)
 
 	c := &fasthttp.RequestCtx{}
 
@@ -344,12 +344,12 @@ func Benchmark_Router_WithCompression(b *testing.B) {
 	handler := func(c *Context) {
 		c.Next()
 	}
-	app.Get("/", handler)
-	app.Get("/", handler)
-	app.Get("/", handler)
-	app.Get("/", handler)
-	app.Get("/", handler)
-	app.Get("/", handler)
+	app.GET("/", handler)
+	app.GET("/", handler)
+	app.GET("/", handler)
+	app.GET("/", handler)
+	app.GET("/", handler)
+	app.GET("/", handler)
 
 	c := &fasthttp.RequestCtx{}
 
@@ -482,7 +482,7 @@ func Benchmark_Router_Handler_Unescape(b *testing.B) {
 	app := New()
 	app.Settings.UnescapePath = true
 	registerDummyRoutes(app)
-	app.Delete("/créer", func(c *Context) {})
+	app.DELETE("/créer", func(c *Context) {})
 
 	c := &fasthttp.RequestCtx{}
 

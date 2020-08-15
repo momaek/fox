@@ -38,7 +38,7 @@ type Error struct {
 }
 
 // App denotes the Fiber application.
-type App struct {
+type Engine struct {
 	mutex sync.Mutex
 	// Route stack divided by HTTP methods
 	stack [][]*Route
@@ -223,9 +223,9 @@ var defaultErrorHandler = func(ctx *Context, err error) {
 //      Prefork: true,
 //      ServerHeader: "Fiber",
 //  })
-func New(settings ...*Settings) *App {
+func New(settings ...*Settings) *Engine {
 	// Create a new app
-	app := &App{
+	app := &Engine{
 		// Create router stack
 		stack: make([][]*Route, len(intMethod)),
 		// Create Ctx pool
@@ -276,7 +276,7 @@ func New(settings ...*Settings) *App {
 //  app.Use(handler)
 //  app.Use("/api", handler)
 //  app.Use("/api", handler, handler)
-func (app *App) Use(args ...interface{}) Router {
+func (app *Engine) Use(args ...interface{}) Router {
 	var prefix string
 	var handlers []Handler
 
@@ -294,9 +294,9 @@ func (app *App) Use(args ...interface{}) Router {
 	return app
 }
 
-// Get registers a route for GET methods that requests a representation
+// GET registers a route for GET methods that requests a representation
 // of the specified resource. Requests using GET should only retrieve data.
-func (app *App) Get(path string, handlers ...Handler) Router {
+func (app *Engine) GET(path string, handlers ...Handler) Router {
 	route := app.register(MethodGet, path, handlers...)
 	// Add HEAD route
 	headRoute := route
@@ -307,65 +307,65 @@ func (app *App) Get(path string, handlers ...Handler) Router {
 
 // Head registers a route for HEAD methods that asks for a response identical
 // to that of a GET request, but without the response body.
-func (app *App) Head(path string, handlers ...Handler) Router {
+func (app *Engine) HEAD(path string, handlers ...Handler) Router {
 	return app.Add(MethodHead, path, handlers...)
 }
 
 // Post registers a route for POST methods that is used to submit an entity to the
 // specified resource, often causing a change in state or side effects on the server.
-func (app *App) Post(path string, handlers ...Handler) Router {
+func (app *Engine) POST(path string, handlers ...Handler) Router {
 	return app.Add(MethodPost, path, handlers...)
 }
 
 // Put registers a route for PUT methods that replaces all current representations
 // of the target resource with the request payload.
-func (app *App) Put(path string, handlers ...Handler) Router {
+func (app *Engine) PUT(path string, handlers ...Handler) Router {
 	return app.Add(MethodPut, path, handlers...)
 }
 
 // Delete registers a route for DELETE methods that deletes the specified resource.
-func (app *App) Delete(path string, handlers ...Handler) Router {
+func (app *Engine) DELETE(path string, handlers ...Handler) Router {
 	return app.Add(MethodDelete, path, handlers...)
 }
 
 // Connect registers a route for CONNECT methods that establishes a tunnel to the
 // server identified by the target resource.
-func (app *App) Connect(path string, handlers ...Handler) Router {
+func (app *Engine) CONNECT(path string, handlers ...Handler) Router {
 	return app.Add(MethodConnect, path, handlers...)
 }
 
 // Options registers a route for OPTIONS methods that is used to describe the
 // communication options for the target resource.
-func (app *App) Options(path string, handlers ...Handler) Router {
+func (app *Engine) OPTIONS(path string, handlers ...Handler) Router {
 	return app.Add(MethodOptions, path, handlers...)
 }
 
 // Trace registers a route for TRACE methods that performs a message loop-back
 // test along the path to the target resource.
-func (app *App) Trace(path string, handlers ...Handler) Router {
+func (app *Engine) TRACE(path string, handlers ...Handler) Router {
 	return app.Add(MethodTrace, path, handlers...)
 }
 
 // Patch registers a route for PATCH methods that is used to apply partial
 // modifications to a resource.
-func (app *App) Patch(path string, handlers ...Handler) Router {
+func (app *Engine) PATCH(path string, handlers ...Handler) Router {
 	return app.Add(MethodPatch, path, handlers...)
 }
 
 // Add ...
-func (app *App) Add(method, path string, handlers ...Handler) Router {
+func (app *Engine) Add(method, path string, handlers ...Handler) Router {
 	app.register(method, path, handlers...)
 	return app
 }
 
 // Static ...
-func (app *App) Static(prefix, root string, config ...Static) Router {
+func (app *Engine) Static(prefix, root string, config ...Static) Router {
 	app.registerStatic(prefix, root, config...)
 	return app
 }
 
 // All ...
-func (app *App) All(path string, handlers ...Handler) Router {
+func (app *Engine) All(path string, handlers ...Handler) Router {
 	for _, method := range intMethod {
 		app.Add(method, path, handlers...)
 	}
@@ -373,7 +373,7 @@ func (app *App) All(path string, handlers ...Handler) Router {
 }
 
 // Group is used for Routes with common prefix to define a new sub-router with optional middleware.
-func (app *App) Group(prefix string, handlers ...Handler) Router {
+func (app *Engine) Group(prefix string, handlers ...Handler) Router {
 	if len(handlers) > 0 {
 		app.register(methodUse, prefix, handlers...)
 	}
@@ -398,7 +398,7 @@ func NewError(code int, message ...string) *Error {
 //  for _, r := range app.Routes() {
 //  	fmt.Printf("%s\t%s\n", r.Method, r.Path)
 //  }
-func (app *App) Routes() []*Route {
+func (app *Engine) Routes() []*Route {
 	fmt.Println("routes is deprecated since v1.13.2, please use `app.Stack()` to access the raw router stack")
 	routes := make([]*Route, 0)
 	for m := range app.stack {
@@ -419,7 +419,7 @@ func (app *App) Routes() []*Route {
 }
 
 // Serve is deprecated, please use app.Listener()
-func (app *App) Serve(ln net.Listener, tlsconfig ...*tls.Config) error {
+func (app *Engine) Serve(ln net.Listener, tlsconfig ...*tls.Config) error {
 	fmt.Println("serve: app.Serve() is deprecated since v1.12.5, please use app.Listener()")
 	return app.Listener(ln, tlsconfig...)
 }
@@ -428,7 +428,7 @@ func (app *App) Serve(ln net.Listener, tlsconfig ...*tls.Config) error {
 // You can pass an optional *tls.Config to enable TLS.
 // This method does not support the Prefork feature
 // To use Prefork, please use app.Listen()
-func (app *App) Listener(ln net.Listener, tlsconfig ...*tls.Config) error {
+func (app *Engine) Listener(ln net.Listener, tlsconfig ...*tls.Config) error {
 	// Update fiber server settings
 	app.init()
 	// TLS config
@@ -449,7 +449,7 @@ func (app *App) Listener(ln net.Listener, tlsconfig ...*tls.Config) error {
 //  app.Listen("8080")
 //  app.Listen(":8080")
 //  app.Listen("127.0.0.1:8080")
-func (app *App) Listen(address interface{}, tlsconfig ...*tls.Config) error {
+func (app *Engine) Listen(address interface{}, tlsconfig ...*tls.Config) error {
 	// Convert address to string
 	addr, ok := address.(string)
 	if !ok {
@@ -491,12 +491,12 @@ func (app *App) Listen(address interface{}, tlsconfig ...*tls.Config) error {
 }
 
 // Handler returns the server handler.
-func (app *App) Handler() fasthttp.RequestHandler {
+func (app *Engine) Handler() fasthttp.RequestHandler {
 	return app.handler
 }
 
-// Handler returns the server handler.
-func (app *App) Stack() [][]*Route {
+// Stack handler returns the server handler.
+func (app *Engine) Stack() [][]*Route {
 	return app.stack
 }
 
@@ -507,7 +507,7 @@ func (app *App) Stack() [][]*Route {
 // Make sure the program doesn't exit and waits instead for Shutdown to return.
 //
 // Shutdown does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
-func (app *App) Shutdown() error {
+func (app *Engine) Shutdown() error {
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
 	if app.server == nil {
@@ -518,7 +518,7 @@ func (app *App) Shutdown() error {
 
 // Test is used for internal debugging by passing a *http.Request.
 // Timeout is optional and defaults to 1s, -1 will disable it completely.
-func (app *App) Test(request *http.Request, msTimeout ...int) (*http.Response, error) {
+func (app *Engine) Test(request *http.Request, msTimeout ...int) (*http.Response, error) {
 	timeout := 1000 // 1 second default
 	if len(msTimeout) > 0 {
 		timeout = msTimeout[0]
@@ -578,7 +578,7 @@ func (dl *disableLogger) Printf(format string, args ...interface{}) {
 	// fmt.Println(fmt.Sprintf(format, args...))
 }
 
-func (app *App) init() *App {
+func (app *Engine) init() *Engine {
 	app.mutex.Lock()
 	// Load view engine if provided
 	if app.Settings != nil {
@@ -645,7 +645,7 @@ const (
 	cReset = "\u001b[0m"
 )
 
-func (app *App) startupMessage(addr string, tls bool, pids string) {
+func (app *Engine) startupMessage(addr string, tls bool, pids string) {
 	// ignore child processes
 	if app.IsChild() {
 		return

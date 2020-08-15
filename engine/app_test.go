@@ -19,7 +19,7 @@ import (
 	"github.com/valyala/fasthttp/fasthttputil"
 )
 
-func testStatus200(t *testing.T, app *App, url string, method string) {
+func testStatus200(t *testing.T, app *Engine, url string, method string) {
 	req := httptest.NewRequest(method, url, nil)
 
 	resp, err := app.Test(req)
@@ -32,9 +32,9 @@ func Test_App_MethodNotAllowed(t *testing.T) {
 
 	app.Use(func(ctx *Context) { ctx.Next() })
 
-	app.Post("/", func(c *Context) {})
+	app.POST("/", func(c *Context) {})
 
-	app.Options("/", func(c *Context) {})
+	app.OPTIONS("/", func(c *Context) {})
 
 	resp, err := app.Test(httptest.NewRequest("POST", "/", nil))
 	utils.AssertEqual(t, nil, err)
@@ -56,7 +56,7 @@ func Test_App_MethodNotAllowed(t *testing.T) {
 	utils.AssertEqual(t, 405, resp.StatusCode)
 	utils.AssertEqual(t, "POST, OPTIONS", resp.Header.Get(HeaderAllow))
 
-	app.Get("/", func(c *Context) {})
+	app.GET("/", func(c *Context) {})
 
 	resp, err = app.Test(httptest.NewRequest("TRACE", "/", nil))
 	utils.AssertEqual(t, nil, err)
@@ -81,7 +81,7 @@ func Test_App_Custom_Middleware_404_Should_Not_SetMethodNotAllowed(t *testing.T)
 		ctx.Status(404)
 	})
 
-	app.Post("/", func(c *Context) {})
+	app.POST("/", func(c *Context) {})
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
 	utils.AssertEqual(t, nil, err)
@@ -92,7 +92,7 @@ func Test_App_Custom_Middleware_404_Should_Not_SetMethodNotAllowed(t *testing.T)
 		ctx.Next()
 	})
 
-	g.Post("/", func(c *Context) {})
+	g.POST("/", func(c *Context) {})
 
 	resp, err = app.Test(httptest.NewRequest("GET", "/with-next", nil))
 	utils.AssertEqual(t, nil, err)
@@ -105,7 +105,7 @@ func Test_App_ServerErrorHandler_SmallReadBuffer(t *testing.T) {
 	)
 	app := New()
 
-	app.Get("/", func(c *Context) {
+	app.GET("/", func(c *Context) {
 		panic(errors.New("should never called"))
 	})
 
@@ -131,7 +131,7 @@ func Test_App_ErrorHandler(t *testing.T) {
 		BodyLimit: 4,
 	})
 
-	app.Get("/", func(c *Context) {
+	app.GET("/", func(c *Context) {
 		c.Next(errors.New("hi, i'm an error"))
 	})
 
@@ -156,7 +156,7 @@ func Test_App_ErrorHandler_Custom(t *testing.T) {
 		},
 	})
 
-	app.Get("/", func(c *Context) {
+	app.GET("/", func(c *Context) {
 		c.Next(errors.New("hi, i'm an error"))
 	})
 
@@ -172,16 +172,16 @@ func Test_App_ErrorHandler_Custom(t *testing.T) {
 func Test_App_Nested_Params(t *testing.T) {
 	app := New()
 
-	app.Get("/test", func(c *Context) {
+	app.GET("/test", func(c *Context) {
 		c.Status(400).Send("Should move on")
 	})
-	app.Get("/test/:param", func(c *Context) {
+	app.GET("/test/:param", func(c *Context) {
 		c.Status(400).Send("Should move on")
 	})
-	app.Get("/test/:param/test", func(c *Context) {
+	app.GET("/test/:param/test", func(c *Context) {
 		c.Status(400).Send("Should move on")
 	})
-	app.Get("/test/:param/test/:param2", func(c *Context) {
+	app.GET("/test/:param/test/:param2", func(c *Context) {
 		c.Status(200).Send("Good job")
 	})
 
@@ -288,7 +288,7 @@ func Test_App_Use_Params_Group(t *testing.T) {
 	group.Use("/", func(c *Context) {
 		c.Next()
 	})
-	group.Get("/test", func(c *Context) {
+	group.GET("/test", func(c *Context) {
 		utils.AssertEqual(t, "john", c.Params("param"))
 		utils.AssertEqual(t, "doe", c.Params("*"))
 	})
@@ -315,7 +315,7 @@ func Test_App_Chaining(t *testing.T) {
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 202, resp.StatusCode, "Status code")
 
-	app.Get("/test", n, n, n, n, func(c *Context) {
+	app.GET("/test", n, n, n, n, func(c *Context) {
 		c.Status(203)
 	})
 
@@ -330,7 +330,7 @@ func Test_App_Chaining(t *testing.T) {
 func Test_App_Order(t *testing.T) {
 	app := New()
 
-	app.Get("/test", func(c *Context) {
+	app.GET("/test", func(c *Context) {
 		c.Write("1")
 		c.Next()
 	})
@@ -359,31 +359,31 @@ func Test_App_Methods(t *testing.T) {
 
 	app := New()
 
-	app.Connect("/:john?/:doe?", dummyHandler)
+	app.CONNECT("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "CONNECT")
 
-	app.Put("/:john?/:doe?", dummyHandler)
+	app.PUT("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "PUT")
 
-	app.Post("/:john?/:doe?", dummyHandler)
+	app.POST("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "POST")
 
-	app.Delete("/:john?/:doe?", dummyHandler)
+	app.DELETE("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "DELETE")
 
-	app.Head("/:john?/:doe?", dummyHandler)
+	app.HEAD("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "HEAD")
 
-	app.Patch("/:john?/:doe?", dummyHandler)
+	app.PATCH("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "PATCH")
 
-	app.Options("/:john?/:doe?", dummyHandler)
+	app.OPTIONS("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "OPTIONS")
 
-	app.Trace("/:john?/:doe?", dummyHandler)
+	app.TRACE("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "TRACE")
 
-	app.Get("/:john?/:doe?", dummyHandler)
+	app.GET("/:john?/:doe?", dummyHandler)
 	testStatus200(t, app, "/john/doe", "GET")
 
 	app.All("/:john?/:doe?", dummyHandler)
@@ -396,14 +396,14 @@ func Test_App_Methods(t *testing.T) {
 
 func Test_App_New(t *testing.T) {
 	app := New()
-	app.Get("/", func(*Context) {
+	app.GET("/", func(*Context) {
 
 	})
 
 	appConfig := New(&Settings{
 		Immutable: true,
 	})
-	appConfig.Get("/", func(*Context) {
+	appConfig.GET("/", func(*Context) {
 
 	})
 }
@@ -588,7 +588,7 @@ func Test_App_Mixed_Routes_WithSameLen(t *testing.T) {
 	})
 	// routes with the same length
 	app.Static("/tesbar", "./.github")
-	app.Get("/foobar", func(ctx *Context) {
+	app.GET("/foobar", func(ctx *Context) {
 		ctx.Send("FOO_BAR")
 		ctx.Type("html")
 	})
@@ -636,34 +636,34 @@ func Test_App_Group(t *testing.T) {
 	app := New()
 
 	grp := app.Group("/test")
-	grp.Get("/", dummyHandler)
+	grp.GET("/", dummyHandler)
 	testStatus200(t, app, "/test", "GET")
 
-	grp.Get("/:demo?", dummyHandler)
+	grp.GET("/:demo?", dummyHandler)
 	testStatus200(t, app, "/test/john", "GET")
 
-	grp.Connect("/CONNECT", dummyHandler)
+	grp.CONNECT("/CONNECT", dummyHandler)
 	testStatus200(t, app, "/test/CONNECT", "CONNECT")
 
-	grp.Put("/PUT", dummyHandler)
+	grp.PUT("/PUT", dummyHandler)
 	testStatus200(t, app, "/test/PUT", "PUT")
 
-	grp.Post("/POST", dummyHandler)
+	grp.POST("/POST", dummyHandler)
 	testStatus200(t, app, "/test/POST", "POST")
 
-	grp.Delete("/DELETE", dummyHandler)
+	grp.DELETE("/DELETE", dummyHandler)
 	testStatus200(t, app, "/test/DELETE", "DELETE")
 
-	grp.Head("/HEAD", dummyHandler)
+	grp.HEAD("/HEAD", dummyHandler)
 	testStatus200(t, app, "/test/HEAD", "HEAD")
 
-	grp.Patch("/PATCH", dummyHandler)
+	grp.PATCH("/PATCH", dummyHandler)
 	testStatus200(t, app, "/test/PATCH", "PATCH")
 
-	grp.Options("/OPTIONS", dummyHandler)
+	grp.OPTIONS("/OPTIONS", dummyHandler)
 	testStatus200(t, app, "/test/OPTIONS", "OPTIONS")
 
-	grp.Trace("/TRACE", dummyHandler)
+	grp.TRACE("/TRACE", dummyHandler)
 	testStatus200(t, app, "/test/TRACE", "TRACE")
 
 	grp.All("/ALL", dummyHandler)
@@ -673,14 +673,14 @@ func Test_App_Group(t *testing.T) {
 	testStatus200(t, app, "/test/USE/oke", "GET")
 
 	api := grp.Group("/v1")
-	api.Post("/", dummyHandler)
+	api.POST("/", dummyHandler)
 
 	resp, err := app.Test(httptest.NewRequest("POST", "/test/v1/", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 	//utils.AssertEqual(t, "/test/v1", resp.Header.Get("Location"), "Location")
 
-	api.Get("/users", dummyHandler)
+	api.GET("/users", dummyHandler)
 	resp, err = app.Test(httptest.NewRequest("GET", "/test/v1/UsErS", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
@@ -698,7 +698,7 @@ func Test_App_Deep_Group(t *testing.T) {
 	gAPI := app.Group("/api", dummyHandler)
 	gV1 := gAPI.Group("/v1", dummyHandler)
 	gUser := gV1.Group("/user", dummyHandler)
-	gUser.Get("/authenticate", func(ctx *Context) {
+	gUser.GET("/authenticate", func(ctx *Context) {
 		runThroughCount++
 		ctx.SendStatus(200)
 	})
@@ -795,13 +795,13 @@ func Test_Test_Timeout(t *testing.T) {
 	app := New()
 	app.Settings.DisableStartupMessage = true
 
-	app.Get("/", func(_ *Context) {})
+	app.GET("/", func(_ *Context) {})
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/", nil), -1)
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
 	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
 
-	app.Get("timeout", func(c *Context) {
+	app.GET("timeout", func(c *Context) {
 		time.Sleep(55 * time.Millisecond)
 	})
 

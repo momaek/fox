@@ -14,15 +14,15 @@ import (
 type Router interface {
 	Use(args ...interface{}) Router
 
-	Get(path string, handlers ...Handler) Router
-	Head(path string, handlers ...Handler) Router
-	Post(path string, handlers ...Handler) Router
-	Put(path string, handlers ...Handler) Router
-	Delete(path string, handlers ...Handler) Router
-	Connect(path string, handlers ...Handler) Router
-	Options(path string, handlers ...Handler) Router
-	Trace(path string, handlers ...Handler) Router
-	Patch(path string, handlers ...Handler) Router
+	GET(path string, handlers ...Handler) Router
+	HEAD(path string, handlers ...Handler) Router
+	POST(path string, handlers ...Handler) Router
+	PUT(path string, handlers ...Handler) Router
+	DELETE(path string, handlers ...Handler) Router
+	CONNECT(path string, handlers ...Handler) Router
+	OPTIONS(path string, handlers ...Handler) Router
+	TRACE(path string, handlers ...Handler) Router
+	PATCH(path string, handlers ...Handler) Router
 
 	Add(method, path string, handlers ...Handler) Router
 	Static(prefix, root string, config ...Static) Router
@@ -79,7 +79,7 @@ func (r *Route) match(path, original string) (match bool, values []string) {
 	return false, values
 }
 
-func (app *App) next(ctx *Context) bool {
+func (app *Engine) next(ctx *Context) bool {
 	// Get stack length
 	lenr := len(app.stack[ctx.methodINT]) - 1
 	// Loop over the route stack starting from previous index
@@ -122,7 +122,7 @@ func (app *App) next(ctx *Context) bool {
 	return false
 }
 
-func (app *App) handler(rctx *fasthttp.RequestCtx) {
+func (app *Engine) handler(rctx *fasthttp.RequestCtx) {
 	// Acquire Ctx with fasthttp request from pool
 	ctx := app.AcquireContext(rctx)
 	// Prettify path
@@ -137,7 +137,7 @@ func (app *App) handler(rctx *fasthttp.RequestCtx) {
 	app.ReleaseContext(ctx)
 }
 
-func (app *App) register(method, pathRaw string, handlers ...Handler) Route {
+func (app *Engine) register(method, pathRaw string, handlers ...Handler) Route {
 	// Uppercase HTTP methods
 	method = utils.ToUpper(method)
 	// Check if the HTTP method is valid unless it's USE
@@ -212,7 +212,7 @@ func (app *App) register(method, pathRaw string, handlers ...Handler) Route {
 	return route
 }
 
-func (app *App) registerStatic(prefix, root string, config ...Static) Route {
+func (app *Engine) registerStatic(prefix, root string, config ...Static) Route {
 	// For security we want to restrict to the current work directory.
 	if len(root) == 0 {
 		root = "."
@@ -321,7 +321,7 @@ func (app *App) registerStatic(prefix, root string, config ...Static) Route {
 	return route
 }
 
-func (app *App) addRoute(method string, route *Route) {
+func (app *Engine) addRoute(method string, route *Route) {
 	// Get unique HTTP method indentifier
 	m := methodInt(method)
 

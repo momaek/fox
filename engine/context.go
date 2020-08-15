@@ -30,7 +30,7 @@ import (
 // Context represents the Context which hold the HTTP request and response.
 // It has methods for the request query string, parameters, body, HTTP headers and so on.
 type Context struct {
-	app          *App                 // Reference to *App
+	app          *Engine              // Reference to *App
 	route        *Route               // Reference to *Route
 	indexRoute   int                  // Index of the current route
 	indexHandler int                  // Index of the current handler
@@ -77,7 +77,7 @@ type Views interface {
 }
 
 // AcquireContext retrieves a new Ctx from the pool.
-func (app *App) AcquireContext(fctx *fasthttp.RequestCtx) *Context {
+func (app *Engine) AcquireContext(fctx *fasthttp.RequestCtx) *Context {
 	ctx := app.pool.Get().(*Context)
 	// Set app reference
 	ctx.app = app
@@ -98,7 +98,7 @@ func (app *App) AcquireContext(fctx *fasthttp.RequestCtx) *Context {
 }
 
 // ReleaseContext releases the ctx back into the pool.
-func (app *App) ReleaseContext(ctx *Context) {
+func (app *Engine) ReleaseContext(ctx *Context) {
 	// Reset values
 	ctx.route = nil
 	ctx.values = nil
@@ -165,7 +165,7 @@ func (ctx *Context) AcceptsLanguages(offers ...string) string {
 }
 
 // App returns the *App reference to access Settings or ErrorHandler
-func (ctx *Context) App() *App {
+func (ctx *Context) App() *Engine {
 	return ctx.app
 }
 
