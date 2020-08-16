@@ -1141,9 +1141,9 @@ func TestContextDownload(t *testing.T) {
 	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
 	defer app.ReleaseContext(ctx)
 
-	ctx.Download("ctx.go", "Awesome File!")
+	ctx.Download("context.go", "Awesome File!")
 
-	f, err := os.Open("./ctx.go")
+	f, err := os.Open("./context.go")
 	utils.AssertEqual(t, nil, err)
 	defer f.Close()
 
@@ -1159,18 +1159,18 @@ func TestContextSendFile(t *testing.T) {
 	app := New()
 
 	// fetch file content
-	f, err := os.Open("./ctx.go")
+	f, err := os.Open("./context.go")
 	utils.AssertEqual(t, nil, err)
 	defer f.Close()
 	expectFileContent, err := ioutil.ReadAll(f)
 	utils.AssertEqual(t, nil, err)
 	// fetch file info for the not modified test case
-	fI, err := os.Stat("./ctx.go")
+	fI, err := os.Stat("./context.go")
 	utils.AssertEqual(t, nil, err)
 
 	// simple test case
 	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
-	err = ctx.SendFile("ctx.go")
+	err = ctx.SendFile("context.go")
 	// check expectation
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, expectFileContent, ctx.Fasthttp.Response.Body())
@@ -1179,7 +1179,7 @@ func TestContextSendFile(t *testing.T) {
 
 	// test with custom error code
 	ctx = app.AcquireContext(&fasthttp.RequestCtx{})
-	err = ctx.Status(StatusInternalServerError).SendFile("ctx.go")
+	err = ctx.Status(StatusInternalServerError).SendFile("context.go")
 	// check expectation
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, expectFileContent, ctx.Fasthttp.Response.Body())
@@ -1189,7 +1189,7 @@ func TestContextSendFile(t *testing.T) {
 	// test not modified
 	ctx = app.AcquireContext(&fasthttp.RequestCtx{})
 	ctx.Fasthttp.Request.Header.Set(HeaderIfModifiedSince, fI.ModTime().Format(time.RFC1123))
-	err = ctx.SendFile("ctx.go")
+	err = ctx.SendFile("context.go")
 	// check expectation
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, StatusNotModified, ctx.Fasthttp.Response.StatusCode())
@@ -1210,7 +1210,7 @@ func TestContextSendFile_Immutable(t *testing.T) {
 	app := New()
 	app.GET("/:file", func(c *Context) {
 		file := c.Params("file")
-		if err := c.SendFile("./.github/" + file + ".html"); err != nil {
+		if err := c.SendFile("../test/" + file + ".html"); err != nil {
 			utils.AssertEqual(t, nil, err)
 		}
 		utils.AssertEqual(t, "index", fmt.Sprintf("%s", file))
@@ -1418,7 +1418,7 @@ func TestContextRender(t *testing.T) {
 	app := New()
 	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
 	defer app.ReleaseContext(ctx)
-	err := ctx.Render("./.github/TEST_DATA/template.html", Map{
+	err := ctx.Render("../test/TEST_DATA/template.html", Map{
 		"Title": "Hello, World!",
 	})
 
@@ -1429,7 +1429,7 @@ func TestContextRender(t *testing.T) {
 	utils.AssertEqual(t, nil, err)
 	utils.AssertEqual(t, "<h1>Hello, World!</h1>", string(ctx.Fasthttp.Response.Body()))
 
-	err = ctx.Render("./.github/TEST_DATA/invalid.html", nil)
+	err = ctx.Render("../test/TEST_DATA/invalid.html", nil)
 	utils.AssertEqual(t, false, err == nil)
 }
 
@@ -1443,7 +1443,7 @@ func (t *testTemplateEngine) Render(w io.Writer, name string, bind interface{}, 
 }
 
 func (t *testTemplateEngine) Load() error {
-	t.templates = template.Must(template.ParseGlob("./.github/TEST_DATA/*.tmpl"))
+	t.templates = template.Must(template.ParseGlob("../test/TEST_DATA/*.tmpl"))
 	return nil
 }
 
@@ -1592,7 +1592,7 @@ func TestContextSendStream(t *testing.T) {
 	ctx.SendStream(bufio.NewReader(bytes.NewReader([]byte("Hello bufio"))))
 	utils.AssertEqual(t, "Hello bufio", string(ctx.Fasthttp.Response.Body()))
 
-	file, err := os.Open("./.github/index.html")
+	file, err := os.Open("../test/index.html")
 	utils.AssertEqual(t, nil, err)
 	ctx.SendStream(bufio.NewReader(file))
 	utils.AssertEqual(t, true, (ctx.Fasthttp.Response.Header.ContentLength() > 200))
@@ -1820,5 +1820,5 @@ func TestContextError(t *testing.T) {
 	ctx := app.AcquireContext(&fasthttp.RequestCtx{})
 	defer app.ReleaseContext(ctx)
 	ctx.Next(errors.New("Hi I'm an error"))
-	utils.AssertEqual(t, "Hi I'm an error!", ctx.Error().Error())
+	utils.AssertEqual(t, "Hi I'm an error", ctx.Error().Error())
 }

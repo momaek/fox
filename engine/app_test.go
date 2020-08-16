@@ -247,7 +247,7 @@ func Test_App_Listen_TLS(t *testing.T) {
 	app := New()
 
 	// Create tls certificate
-	cer, err := tls.LoadX509KeyPair("./.github/TEST_DATA/ssl.pem", "./.github/TEST_DATA/ssl.key")
+	cer, err := tls.LoadX509KeyPair("../test/TEST_DATA/ssl.pem", "../test/TEST_DATA/ssl.key")
 	if err != nil {
 		utils.AssertEqual(t, nil, err)
 	}
@@ -265,7 +265,7 @@ func Test_App_Listener_TLS(t *testing.T) {
 	app := New()
 
 	// Create tls certificate
-	cer, err := tls.LoadX509KeyPair("./.github/TEST_DATA/ssl.pem", "./.github/TEST_DATA/ssl.key")
+	cer, err := tls.LoadX509KeyPair("../test/TEST_DATA/ssl.pem", "../test/TEST_DATA/ssl.key")
 	if err != nil {
 		utils.AssertEqual(t, nil, err)
 	}
@@ -423,8 +423,8 @@ func Test_App_Shutdown(t *testing.T) {
 func Test_App_Static_Index_Default(t *testing.T) {
 	app := New()
 
-	app.Static("/prefix", "./.github/workflows")
-	app.Static("", "./.github/")
+	app.Static("/prefix", "../test/workflows")
+	app.Static("", "../test/")
 	app.Static("test", "", Static{Index: "index.html"})
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/", nil))
@@ -452,7 +452,7 @@ func Test_App_Static_Index_Default(t *testing.T) {
 func Test_App_Static_Direct(t *testing.T) {
 	app := New()
 
-	app.Static("/", "./.github")
+	app.Static("/", "../test")
 
 	resp, err := app.Test(httptest.NewRequest("GET", "/index.html", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
@@ -482,7 +482,7 @@ func Test_App_Static_Group(t *testing.T) {
 		c.Next()
 	})
 
-	grp.Static("/v2", "./.github/FUNDING.yml")
+	grp.Static("/v2", "../test/FUNDING.yml")
 
 	req := httptest.NewRequest("GET", "/v1/v2", nil)
 	resp, err := app.Test(req)
@@ -493,7 +493,7 @@ func Test_App_Static_Group(t *testing.T) {
 	utils.AssertEqual(t, "123", resp.Header.Get("Test-Header"))
 
 	grp = app.Group("/v2")
-	grp.Static("/v3*", "./.github/FUNDING.yml")
+	grp.Static("/v3*", "../test/FUNDING.yml")
 
 	req = httptest.NewRequest("GET", "/v2/v3/john/doe", nil)
 	resp, err = app.Test(req)
@@ -507,7 +507,7 @@ func Test_App_Static_Group(t *testing.T) {
 func Test_App_Static_Wildcard(t *testing.T) {
 	app := New()
 
-	app.Static("*", "./.github/FUNDING.yml")
+	app.Static("*", "../test/FUNDING.yml")
 
 	req := httptest.NewRequest("GET", "/yesyes/john/doe", nil)
 	resp, err := app.Test(req)
@@ -525,7 +525,7 @@ func Test_App_Static_Wildcard(t *testing.T) {
 func Test_App_Static_Prefix_Wildcard(t *testing.T) {
 	app := New()
 
-	app.Static("/test/*", "./.github/FUNDING.yml")
+	app.Static("/test/*", "../test/FUNDING.yml")
 
 	req := httptest.NewRequest("GET", "/test/john/doe", nil)
 	resp, err := app.Test(req)
@@ -534,7 +534,7 @@ func Test_App_Static_Prefix_Wildcard(t *testing.T) {
 	utils.AssertEqual(t, false, resp.Header.Get("Content-Length") == "")
 	utils.AssertEqual(t, "text/plain; charset=utf-8", resp.Header.Get("Content-Type"))
 
-	app.Static("/my/nameisjohn*", "./.github/FUNDING.yml")
+	app.Static("/my/nameisjohn*", "../test/FUNDING.yml")
 
 	resp, err = app.Test(httptest.NewRequest("GET", "/my/nameisjohn/no/its/not", nil))
 	utils.AssertEqual(t, nil, err, "app.Test(req)")
@@ -549,7 +549,7 @@ func Test_App_Static_Prefix_Wildcard(t *testing.T) {
 
 func Test_App_Static_Prefix(t *testing.T) {
 	app := New()
-	app.Static("/john", "./.github")
+	app.Static("/john", "../test")
 
 	req := httptest.NewRequest("GET", "/john/stale.yml", nil)
 	resp, err := app.Test(req)
@@ -558,7 +558,7 @@ func Test_App_Static_Prefix(t *testing.T) {
 	utils.AssertEqual(t, false, resp.Header.Get("Content-Length") == "")
 	utils.AssertEqual(t, "text/plain; charset=utf-8", resp.Header.Get("Content-Type"))
 
-	app.Static("/prefix", "./.github/workflows")
+	app.Static("/prefix", "../test/workflows")
 
 	req = httptest.NewRequest("GET", "/prefix/test.yml", nil)
 	resp, err = app.Test(req)
@@ -567,7 +567,7 @@ func Test_App_Static_Prefix(t *testing.T) {
 	utils.AssertEqual(t, false, resp.Header.Get("Content-Length") == "")
 	utils.AssertEqual(t, "text/plain; charset=utf-8", resp.Header.Get("Content-Type"))
 
-	app.Static("/single", "./.github/workflows/test.yml")
+	app.Static("/single", "../test/workflows/test.yml")
 
 	req = httptest.NewRequest("GET", "/single", nil)
 	resp, err = app.Test(req)
@@ -587,7 +587,7 @@ func Test_App_Mixed_Routes_WithSameLen(t *testing.T) {
 		ctx.Next()
 	})
 	// routes with the same length
-	app.Static("/tesbar", "./.github")
+	app.Static("/tesbar", "../test")
 	app.GET("/foobar", func(ctx *Context) {
 		ctx.Send("FOO_BAR")
 		ctx.Type("html")
