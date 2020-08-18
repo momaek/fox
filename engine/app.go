@@ -16,10 +16,11 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"fox/engine/utils"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/valyala/fasthttp"
+
+	"fox/engine/utils"
 )
 
 // Version of current package
@@ -649,13 +650,12 @@ func (app *Engine) startupMessage(addr string, tls bool, pids string) {
 	if app.IsChild() {
 		return
 	}
-	// ascii logo
-	var logo string
-	logo += `%s        _______ __                 %s` + "\n"
-	logo += `%s  ____%s / ____(_) /_  ___  _____  %s` + "\n"
-	logo += `%s_____%s / /_  / / __ \/ _ \/ ___/  %s` + "\n"
-	logo += `%s  __%s / __/ / / /_/ /  __/ /      %s` + "\n"
-	logo += `%s    /_/   /_/_.___/\___/_/%s %s` + "\n"
+
+	var message string
+	message += `%s` + "\n"
+	message += `%s` + "\n"
+	message += `%s` + "\n"
+	message += `%s` + "\n"
 
 	host, port := parseAddr(addr)
 	var (
@@ -687,11 +687,14 @@ func (app *Engine) startupMessage(addr string, tls bool, pids string) {
 		return fmt.Sprintf("%s%v%s", cCyan, v, cBlack)
 	}
 	// Build startup banner
-	fmt.Fprintf(out, logo, cBlack, cBlack,
-		cCyan, cBlack, fmt.Sprintf(" HOST     %s\tOS      %s", cyan(host), cyan(osName)),
-		cCyan, cBlack, fmt.Sprintf(" PORT     %s\tTHREADS %s", cyan(port), cyan(cpuThreads)),
-		cCyan, cBlack, fmt.Sprintf(" TLS      %s\tMEM     %s", cyan(tlsStr), cyan(memTotal)),
-		cBlack, cyan(Version), fmt.Sprintf(" HANDLERS %s\t\t\t PID     %s%s%s\n", cyan(handlerCount), cyan(pid), pids, cReset),
+	// cyan(Version),
+	fmt.Fprintf(
+		out,
+		message,
+		fmt.Sprintf(" HOST     %s\tOS      %s", cyan(host), cyan(osName)),
+		fmt.Sprintf(" PORT     %s\tTHREADS %s", cyan(port), cyan(cpuThreads)),
+		fmt.Sprintf(" TLS      %s\tMEM     %s", cyan(tlsStr), cyan(memTotal)),
+		fmt.Sprintf(" HANDLERS %s\tPID     %s%s%s\n", cyan(handlerCount), cyan(pid), pids, cReset),
 	)
 	// Write to io.write
 	_ = out.Flush()
