@@ -1,244 +1,150 @@
+// Copyright 2013 Julien Schmidt. All rights reserved.
+// Based on the path package, Copyright 2009 The Go Authors.
+// Use of this source code is governed by a BSD-style license that can be found
+// in the LICENSE file.
+
 package engine
 
-import (
-	"strings"
-	"sync/atomic"
+// CleanPath is the URL version of path.Clean, it returns a canonical URL path
+// for p, eliminating . and .. elements.
+//
+// The following rules are applied iteratively until no further processing can
+// be done:
+//	1. Replace multiple slashes with a single slash.
+//	2. Eliminate each . path name element (the current directory).
+//	3. Eliminate each inner .. path name element (the parent directory)
+//	   along with the non-.. element that precedes it.
+//	4. Eliminate .. elements that begin a rooted path:
+//	   that is, replace "/.." by "/" at the beginning of a path.
+//
+// If the result of this process is an empty string, "/" is returned
+func CleanPath(p string) string {
+	const stackBufSize = 128
 
-	"fox/engine/utils"
-)
+	// Turn empty string into "/"
+	if p == "" {
+		return "/"
+	}
 
-// routeParser  holds the path segments and param names
-type routeParser struct {
-	segs   []paramSeg
-	params []string
-}
+	// Reasonably sized buffer on stack to avoid allocations in the common case.
+	// If a larger buffer is required, it gets allocated dynamically.
+	buf := make([]byte, 0, stackBufSize)
 
-// paramsSeg holds the segment metadata
-type paramSeg struct {
-	Param      string
-	Const      string
-	IsParam    bool
-	IsOptional bool
-	IsLast     bool
-	EndChar    byte
-}
+	n := len(p)
 
-// list of possible parameter and segment delimiter
-// slash has a special role, unlike the other parameters it must not be interpreted as a parameter
-// TODO '(' ')' delimiters for regex patterns
-var routeDelimiter = []byte{'/', '-', '.'}
+	// Invariants:
+	//      reading from path; r is index of next byte to process.
+	//      writing to buf; w is index of next byte to write.
 
-const wildcardParam string = "*"
+	// path must start with '/'
+	r := 1
+	w := 1
 
-// parseRoute analyzes the route and divides it into segments for constant areas and parameters,
-// this information is needed later when assigning the requests to the declared routes
-func parseRoute(pattern string) (p routeParser) {
-	var out []paramSeg
-	var params []string
+	if p[0] != '/' {
+		r = 0
 
-	part, delimiterPos := "", 0
-	for len(pattern) > 0 && delimiterPos != -1 {
-		delimiterPos = findNextRouteSegmentEnd(pattern)
-		if delimiterPos != -1 {
-			part = pattern[:delimiterPos]
+		if n+1 > stackBufSize {
+			buf = make([]byte, n+1)
 		} else {
-			part = pattern
+			buf = buf[:n+1]
 		}
-
-		partLen, lastSeg := len(part), len(out)-1
-		if partLen == 0 { // skip empty parts
-			if len(pattern) > 0 {
-				// remove first char
-				pattern = pattern[1:]
-			}
-			continue
-		}
-		// is parameter ?
-		if part[0] == '*' || part[0] == ':' {
-			out = append(out, paramSeg{
-				Param:      utils.GetTrimmedParam(part),
-				IsParam:    true,
-				IsOptional: part == wildcardParam || part[partLen-1] == '?',
-			})
-			lastSeg = len(out) - 1
-			params = append(params, out[lastSeg].Param)
-			// combine const segments
-		} else if lastSeg >= 0 && !out[lastSeg].IsParam {
-			out[lastSeg].Const += string(out[lastSeg].EndChar) + part
-			// create new const segment
-		} else {
-			out = append(out, paramSeg{
-				Const: part,
-			})
-			lastSeg = len(out) - 1
-		}
-
-		if delimiterPos != -1 && len(pattern) >= delimiterPos+1 {
-			out[lastSeg].EndChar = pattern[delimiterPos]
-			pattern = pattern[delimiterPos+1:]
-		} else {
-			// last default char
-			out[lastSeg].EndChar = '/'
-		}
-	}
-	if len(out) > 0 {
-		out[len(out)-1].IsLast = true
+		buf[0] = '/'
 	}
 
-	p = routeParser{segs: out, params: params}
-	return
-}
+	trailing := n > 1 && p[n-1] == '/'
 
-// findNextRouteSegmentEnd searches in the route for the next end position for a segment
-func findNextRouteSegmentEnd(search string) int {
-	nextPosition := -1
-	for _, delimiter := range routeDelimiter {
-		if pos := strings.IndexByte(search, delimiter); pos != -1 && (pos < nextPosition || nextPosition == -1) {
-			nextPosition = pos
-		}
-	}
+	// A bit more clunky without a 'lazybuf' like the path package, but the loop
+	// gets completely inlined (bufApp calls).
+	// So in contrast to the path package this loop has no expensive function
+	// calls (except make, if needed).
 
-	return nextPosition
-}
+	for r < n {
+		switch {
+		case p[r] == '/':
+			// empty path element, trailing slash is added after the end
+			r++
 
-// getMatch parses the passed url and tries to match it against the route segments and determine the parameter positions
-func (p *routeParser) getMatch(s string, partialCheck bool) ([][2]int, bool) {
-	lenKeys := len(p.params)
-	paramsPositions := getAllocFreeParamsPos(lenKeys)
-	var i, j, paramsIterator, partLen, paramStart int
-	if len(s) > 0 {
-		s = s[1:]
-		paramStart++
-	}
-	for index, segment := range p.segs {
-		partLen = len(s)
-		// check parameter
-		if segment.IsParam {
-			// determine parameter length
-			if segment.Param == wildcardParam {
-				if segment.IsLast {
-					i = partLen
+		case p[r] == '.' && r+1 == n:
+			trailing = true
+			r++
+
+		case p[r] == '.' && p[r+1] == '/':
+			// . element
+			r += 2
+
+		case p[r] == '.' && p[r+1] == '.' && (r+2 == n || p[r+2] == '/'):
+			// .. element: remove to last /
+			r += 3
+
+			if w > 1 {
+				// can backtrack
+				w--
+
+				if len(buf) == 0 {
+					for w > 1 && p[w] != '/' {
+						w--
+					}
 				} else {
-					i = findWildcardParamLen(s, p.segs, index)
+					for w > 1 && buf[w] != '/' {
+						w--
+					}
 				}
-			} else {
-				i = strings.IndexByte(s, segment.EndChar)
-			}
-			if i == -1 {
-				i = partLen
 			}
 
-			if !segment.IsOptional && i == 0 {
-				return nil, false
-				// special case for not slash end character
-			} else if i > 0 && partLen >= i && segment.EndChar != '/' && s[i-1] == '/' {
-				return nil, false
+		default:
+			// Real path element.
+			// Add slash if needed
+			if w > 1 {
+				bufApp(&buf, p, w, '/')
+				w++
 			}
 
-			paramsPositions[paramsIterator][0], paramsPositions[paramsIterator][1] = paramStart, paramStart+i
-			paramsIterator++
+			// Copy element
+			for r < n && p[r] != '/' {
+				bufApp(&buf, p, w, p[r])
+				w++
+				r++
+			}
+		}
+	}
+
+	// Re-append trailing slash
+	if trailing && w > 1 {
+		bufApp(&buf, p, w, '/')
+		w++
+	}
+
+	// If the original string was not modified (or only shortened at the end),
+	// return the respective substring of the original string.
+	// Otherwise return a new string from the buffer.
+	if len(buf) == 0 {
+		return p[:w]
+	}
+	return string(buf[:w])
+}
+
+// Internal helper to lazily create a buffer if necessary.
+// Calls to this function get inlined.
+func bufApp(buf *[]byte, s string, w int, c byte) {
+	b := *buf
+	if len(b) == 0 {
+		// No modification of the original string so far.
+		// If the next character is the same as in the original string, we do
+		// not yet have to allocate a buffer.
+		if s[w] == c {
+			return
+		}
+
+		// Otherwise use either the stack buffer, if it is large enough, or
+		// allocate a new buffer on the heap, and copy all previous characters.
+		if l := len(s); l > cap(b) {
+			*buf = make([]byte, len(s))
 		} else {
-			// check const segment
-			i = len(segment.Const)
-			if partLen < i || (i == 0 && partLen > 0) || s[:i] != segment.Const || (partLen > i && s[i] != segment.EndChar) {
-				return nil, false
-			}
+			*buf = (*buf)[:l]
 		}
+		b = *buf
 
-		// reduce founded part from the string
-		if partLen > 0 {
-			j = i + 1
-			if segment.IsLast || partLen < j {
-				j = i
-			}
-			paramStart += j
-
-			s = s[j:]
-		}
+		copy(b, s[:w])
 	}
-	if len(s) != 0 && !partialCheck {
-		return nil, false
-	}
-
-	return paramsPositions, true
-}
-
-// paramsForPos get parameters for the given positions from the given path
-func (p *routeParser) paramsForPos(path string, paramsPositions [][2]int) []string {
-	size := len(paramsPositions)
-	params := getAllocFreeParams(size)
-	for i, positions := range paramsPositions {
-		if positions[0] != positions[1] && len(path) >= positions[1] {
-			params[i] = path[positions[0]:positions[1]]
-		} else {
-			params[i] = ""
-		}
-	}
-
-	return params
-}
-
-// findWildcardParamLen for the expressjs wildcard behavior (right to left greedy)
-// look at the other segments and take what is left for the wildcard from right to left
-func findWildcardParamLen(s string, segments []paramSeg, currIndex int) int {
-	// "/api/*/:param" - "/api/joker/batman/robin/1" -> "joker/batman/robin", "1"
-	// "/api/*/:param" - "/api/joker/batman"         -> "joker", "batman"
-	// "/api/*/:param" - "/api/joker-batman-robin/1" -> "joker-batman-robin", "1"
-	endChar := segments[currIndex].EndChar
-	neededEndChars := 0
-	// count the needed chars for the other segments
-	for i := currIndex + 1; i < len(segments); i++ {
-		if segments[i].EndChar == endChar {
-			neededEndChars++
-		}
-	}
-	// remove the part the other segments still need
-	for {
-		pos := strings.LastIndexByte(s, endChar)
-		if pos != -1 {
-			s = s[:pos]
-		}
-		neededEndChars--
-		if neededEndChars <= 0 || pos == -1 {
-			break
-		}
-	}
-
-	return len(s)
-}
-
-// performance tricks
-// creates predefined arrays that are used to match the request routes so that no allocations need to be made
-var paramsDummy, paramsPosDummy = make([]string, 100000), make([][2]int, 100000)
-
-// positions parameter that moves further and further to the right and remains atomic over all simultaneous requests
-// to assign a separate range to each request
-var startParamList, startParamPosList uint32 = 0, 0
-
-// getAllocFreeParamsPos fetches a slice area from the predefined slice, which is currently not in use
-func getAllocFreeParamsPos(allocLen int) [][2]int {
-	size := uint32(allocLen)
-	start := atomic.AddUint32(&startParamPosList, size)
-	if (start + 10) >= uint32(len(paramsPosDummy)) {
-		atomic.StoreUint32(&startParamPosList, 0)
-		return getAllocFreeParamsPos(allocLen)
-	}
-	start -= size
-	allocLen += int(start)
-	paramsPositions := paramsPosDummy[start:allocLen:allocLen]
-	return paramsPositions
-}
-
-// getAllocFreeParams fetches a slice area from the predefined slice, which is currently not in use
-func getAllocFreeParams(allocLen int) []string {
-	size := uint32(allocLen)
-	start := atomic.AddUint32(&startParamList, size)
-	if (start + 10) >= uint32(len(paramsDummy)) {
-		atomic.StoreUint32(&startParamList, 0)
-		return getAllocFreeParams(allocLen)
-	}
-	start -= size
-	allocLen += int(start)
-	params := paramsDummy[start:allocLen:allocLen]
-	return params
+	b[w] = c
 }
