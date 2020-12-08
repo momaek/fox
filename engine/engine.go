@@ -49,28 +49,14 @@ func (c HandlersChain) Last() HandlerFunc {
 }
 
 // RouterConfigFunc engine load router config func
-type RouterConfigFunc func(router Engine)
+type RouterConfigFunc func(router IRouter)
 
 // Engine http server
 type Engine interface {
-
-	// Use middleware
-	Use(middleware ...HandlerFunc)
+	IRouter
 
 	// NoRoute adds handlers for NoRoute. It is recommended to return a 404 code by default
 	NoRoute(handlers ...HandlerFunc)
-
-	Handle(httpMethod string, relativePath string, handlers ...HandlerFunc)
-	Any(relativePath string, handlers ...HandlerFunc)
-	GET(relativePath string, handlers ...HandlerFunc)
-	POST(relativePath string, handlers ...HandlerFunc)
-	DELETE(relativePath string, handlers ...HandlerFunc)
-	PATCH(relativePath string, handlers ...HandlerFunc)
-	PUT(relativePath string, handlers ...HandlerFunc)
-	OPTIONS(relativePath string, handlers ...HandlerFunc)
-	HEAD(relativePath string, handlers ...HandlerFunc)
-
-	Group(relativePath string, handlers ...HandlerFunc) *RouterGroup
 
 	// Load router config
 	Load(f RouterConfigFunc)
@@ -87,4 +73,27 @@ type Engine interface {
 
 	// ServeHTTP conforms to the http.Handler interface.
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
+}
+
+// IRouter defines all router handle interface includes single and group router.
+type IRouter interface {
+
+	// Use middleware
+	Use(middleware ...HandlerFunc)
+
+	Handle(httpMethod string, relativePath string, handlers ...HandlerFunc)
+	Any(relativePath string, handlers ...HandlerFunc)
+	GET(relativePath string, handlers ...HandlerFunc)
+	POST(relativePath string, handlers ...HandlerFunc)
+	DELETE(relativePath string, handlers ...HandlerFunc)
+	PATCH(relativePath string, handlers ...HandlerFunc)
+	PUT(relativePath string, handlers ...HandlerFunc)
+	OPTIONS(relativePath string, handlers ...HandlerFunc)
+	HEAD(relativePath string, handlers ...HandlerFunc)
+
+	Static(relativePath string, root string)
+	StaticFile(relativePath string, filepath string)
+	StaticFS(relativePath string, fs http.FileSystem)
+
+	Group(relativePath string, handlers ...HandlerFunc) *IRouter
 }
