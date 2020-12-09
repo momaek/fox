@@ -78,7 +78,7 @@ type node struct {
 	nType     nodeType
 	priority  uint32
 	children  []*node
-	handle    Handle
+	handle    HandlerFunc
 }
 
 // Increments priority of the given child and reorders if necessary
@@ -106,7 +106,7 @@ func (n *node) incrementChildPrio(pos int) int {
 
 // addRoute adds a node with the given handle to the path.
 // Not concurrency-safe!
-func (n *node) addRoute(path string, handle Handle) {
+func (n *node) addRoute(path string, handle HandlerFunc) {
 	fullPath := path
 	n.priority++
 
@@ -214,7 +214,7 @@ walk:
 	}
 }
 
-func (n *node) insertChild(path, fullPath string, handle Handle) {
+func (n *node) insertChild(path, fullPath string, handle HandlerFunc) {
 	for {
 		// Find prefix until first wildcard
 		wildcard, i, valid := findWildcard(path)
@@ -323,7 +323,7 @@ func (n *node) insertChild(path, fullPath string, handle Handle) {
 // If no handle can be found, a TSR (trailing slash redirect) recommendation is
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
-func (n *node) getValue(path string, params func() *Params) (handle Handle, ps *Params, tsr bool) {
+func (n *node) getValue(path string, params func() *Params) (handle HandlerFunc, ps *Params, tsr bool) {
 walk: // Outer loop for walking the tree
 	for {
 		prefix := n.path

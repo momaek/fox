@@ -26,7 +26,7 @@ import (
 // Used as a workaround since we can't compare functions or their addresses
 var fakeHandlerValue string
 
-func fakeHandler(val string) Handle {
+func fakeHandler(val string) HandlerFunc {
 	return func(http.ResponseWriter, *http.Request, Params) {
 		fakeHandlerValue = val
 	}
