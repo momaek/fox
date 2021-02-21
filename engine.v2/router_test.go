@@ -84,3 +84,21 @@ func TestRouterHandle(t *testing.T) {
 	})
 
 }
+
+func TestRouterGroup(t *testing.T) {
+
+	Convey("Register all HTTP methods routes", t, func() {
+
+		var router = new(Router)
+
+		var comments = func() string {
+			return "projects/:id/comments"
+		}
+
+		router.Group("projects/:id", func(group *Router) {
+			group.GET("comments", comments)
+		})
+
+	})
+
+}

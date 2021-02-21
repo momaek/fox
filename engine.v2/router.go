@@ -62,6 +62,8 @@ type Router struct {
 	mu     sync.RWMutex
 	es     []*muxEntry
 	routes map[string]map[string]*muxEntry
+
+	basePath string
 }
 
 func (router *Router) registered(httpMethod, pattern string) bool {
@@ -91,6 +93,8 @@ func (router *Router) Handle(httpMethod, relativePath string, handlers ...Handle
 	if !_HTTPMethodMap[httpMethod] {
 		log.Panicf("unknown HTTP method: %s %s", httpMethod, relativePath)
 	}
+
+	relativePath = path.Join(router.basePath, relativePath)
 
 	pattern := cleanPath(relativePath)
 	// if pattern == "" {
@@ -157,4 +161,16 @@ func (router *Router) HEAD(relativePath string, handlers ...Handler) {
 // OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle).
 func (router *Router) OPTIONS(relativePath string, handlers ...Handler) {
 	router.Handle(http.MethodOptions, relativePath, handlers...)
+}
+
+// Group creates a new router group.
+// You should add all the routes that have common middlewares or the same path prefix.
+func (router *Router) Group(relativePath string, group func(group *Router)) {
+
+	var r = &Router{
+		// TODO(m)
+		basePath: relativePath,
+	}
+
+	group(r)
 }
